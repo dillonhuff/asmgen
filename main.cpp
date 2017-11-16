@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 
+#define CATCH_CONFIG_MAIN
+
+#include "catch.hpp"
+
 using namespace std;
 
 string inlineASMFunction(const std::string& funcName,
@@ -20,7 +24,7 @@ string inlineASMFunction(const std::string& funcName,
   return res;
 }
 
-int main() {
+TEST_CASE("Build tiny program") {
   vector<string> asmOps;
   asmOps.push_back("movdqu (%rdi), %xmm0");
   asmOps.push_back("movdqu 4(%rdi), %xmm1");
