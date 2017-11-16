@@ -42,6 +42,41 @@ public:
   virtual ~Instruction() {}
 };
 
+class Arithmetic : public Instruction {
+protected:
+  ArithType tp;
+  int registerWidth;
+  int opWidth;
+  std::string source;
+  std::string receiver;
+
+public:
+  Arithmetic(const ArithType tp_,
+             const int registerWidth_,
+             const int opWidth_,
+             const std::string& source_,
+             const std::string& receiver_) :
+    tp(tp_),
+    registerWidth(registerWidth_),
+    opWidth(opWidth_),
+    source(source_),
+    receiver(receiver_) {}
+
+  std::string toString() const {
+    string opName;
+    if (tp == ARITH_INT_ADD) {
+      if ((registerWidth == 128) && (opWidth == 32)) {
+        opName = "paddd ";
+      } else {
+        assert(false);
+      }
+    } else {
+      assert(false);
+    }
+    return opName + "%" + source + ", %" + receiver;
+  }
+};
+
 class Load : public Instruction {
 protected:
   int offset;
@@ -111,12 +146,12 @@ public:
     instructions.push_back(new Store(offset, alignment, width, source));
   }
   
-  void addArithmetic(const ArithType offset,
+  void addArithmetic(const ArithType tp,
                      const int registerWidth,
                      const int opWidth,
                      const std::string& source,
                      const std::string& receiver) {
-    instructions.push_back(new Instruction());
+    instructions.push_back(new Arithmetic(tp, registerWidth, opWidth, source, receiver));
   }
   
   int size() const { return instructions.size(); }
@@ -164,4 +199,9 @@ TEST_CASE("Build program from low representation") {
     buildASMProg(newProgram);
 
   cout << prog << endl;
+
+  std::ofstream out("./test/gencode/" + newProgram.getName() + ".cpp");
+  out << prog;
+  out.close();
+  
 }
