@@ -24,6 +24,13 @@ string inlineASMFunction(const std::string& funcName,
   return res;
 }
 
+string inlineVoidASMFunction(const std::string& funcName,
+                             vector<string> asmOps) {
+  asmOps.push_back("leave");
+  asmOps.push_back("ret");
+  return inlineASMFunction(funcName, asmOps);
+}
+
 TEST_CASE("Build tiny program") {
   vector<string> asmOps;
   asmOps.push_back("movdqu (%rdi), %xmm0");
@@ -36,4 +43,7 @@ TEST_CASE("Build tiny program") {
   string str = inlineASMFunction("test_add_func", asmOps);
 
   cout << str << endl;
+}
+
+TEST_CASE("") {
 }
