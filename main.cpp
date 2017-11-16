@@ -31,6 +31,53 @@ string inlineVoidASMFunction(const std::string& funcName,
   return inlineASMFunction(funcName, asmOps);
 }
 
+enum ArithType {
+  ARITH_INT_ADD,
+  ARITH_FLOAT_ADD,
+};
+
+class Instruction {
+public:
+};
+
+class LowProgram {
+protected:
+  vector<Instruction*> instructions;
+
+public:
+
+  void addLoad(const int offset,
+               const int alignment,
+               const int width,
+               const std::string& receiver) {
+    instructions.push_back(new Instruction());
+  }
+
+  void addStore(const int offset,
+                const int alignment,
+                const int width,
+                const std::string& source) {
+    instructions.push_back(new Instruction());
+  }
+  
+  void addArithmetic(const ArithType offset,
+                     const int registerWidth,
+                     const int opWidth,
+                     const std::string& source,
+                     const std::string& receiver) {
+    instructions.push_back(new Instruction());
+  }
+  
+  int size() const { return instructions.size(); }
+
+  ~LowProgram() {
+    for (auto& is : instructions) {
+      delete is;
+    }
+  }
+
+};
+
 TEST_CASE("Build tiny program") {
   vector<string> asmOps;
   asmOps.push_back("movdqu (%rdi), %xmm0");
@@ -45,5 +92,13 @@ TEST_CASE("Build tiny program") {
   cout << str << endl;
 }
 
-TEST_CASE("") {
+TEST_CASE("Build program from low representation") {
+  LowProgram newProgram;
+  newProgram.addLoad(0, 1, 128, "xmm0");
+  newProgram.addLoad(128 / 8, 1, 128, "xmm1");
+  newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "xmm0", "xmm1");
+  newProgram.addStore((128 / 8)*2, 1, 128, "xmm1");
+
+  REQUIRE(newProgram.size() == 4);
+
 }
