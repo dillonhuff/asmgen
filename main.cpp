@@ -63,6 +63,27 @@ public:
 
 };
 
+class Store : public Instruction {
+protected:
+  int offset;
+  int alignment;
+  int width;
+  std::string source;
+
+public:
+
+  Store(const int offset_,
+       const int alignment_,
+       const int width_,
+       const std::string& source_) :
+    offset(offset_), alignment(alignment_), width(width_), source(source_) {}
+
+  std::string toString() const {
+    return string("movdqu ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+  }
+
+};
+
 class LowProgram {
 protected:
   std::string name;
@@ -87,7 +108,7 @@ public:
                 const int alignment,
                 const int width,
                 const std::string& source) {
-    instructions.push_back(new Instruction());
+    instructions.push_back(new Store(offset, alignment, width, source));
   }
   
   void addArithmetic(const ArithType offset,
