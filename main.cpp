@@ -38,19 +38,49 @@ enum ArithType {
 
 class Instruction {
 public:
+  virtual std::string toString() const { return "instruction!"; }
+  virtual ~Instruction() {}
+};
+
+class Load : public Instruction {
+protected:
+  int offset;
+  int alignment;
+  int width;
+  std::string receiver;
+
+public:
+
+  Load(const int offset_,
+       const int alignment_,
+       const int width_,
+       const std::string& receiver_) :
+    offset(offset_), alignment(alignment_), width(width_), receiver(receiver_) {}
+
+  std::string toString() const {
+    return "movdqu " + to_string(offset) + "(%rdi), %" + receiver;
+  }
+
 };
 
 class LowProgram {
 protected:
+  std::string name;
   vector<Instruction*> instructions;
 
 public:
+
+  LowProgram(const std::string& name_) : name(name_) {}
+
+  std::string getName() const { return name; }
+
+  const std::vector<Instruction*>& getInstructions() const { return instructions; }
 
   void addLoad(const int offset,
                const int alignment,
                const int width,
                const std::string& receiver) {
-    instructions.push_back(new Instruction());
+    instructions.push_back(new Load(offset, alignment, width, receiver));
   }
 
   void addStore(const int offset,
@@ -78,6 +108,14 @@ public:
 
 };
 
+std::string buildASMProg(const LowProgram& prog) {
+  vector<string> opStrings;
+  for (auto iptr : prog.getInstructions()) {
+    opStrings.push_back(iptr->toString());
+  }
+  return inlineVoidASMFunction(prog.getName(), opStrings);
+}
+
 TEST_CASE("Build tiny program") {
   vector<string> asmOps;
   asmOps.push_back("movdqu (%rdi), %xmm0");
@@ -93,7 +131,7 @@ TEST_CASE("Build tiny program") {
 }
 
 TEST_CASE("Build program from low representation") {
-  LowProgram newProgram;
+  LowProgram newProgram("simd_add");
   newProgram.addLoad(0, 1, 128, "xmm0");
   newProgram.addLoad(128 / 8, 1, 128, "xmm1");
   newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "xmm0", "xmm1");
@@ -101,4 +139,8 @@ TEST_CASE("Build program from low representation") {
 
   REQUIRE(newProgram.size() == 4);
 
+  string prog =
+    buildASMProg(newProgram);
+
+  cout << prog << endl;
 }
