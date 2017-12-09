@@ -434,8 +434,11 @@ LowProgram buildLowProgram(const std::string& name,
 
       assert(trop->getOpName() == "mux");
 
+      // TODO: Remove length hardcoding
       auto& ra = regAssign.registerAssignment;
       prog.addMov(ra[trop->getOp0()], ra[trop], 16);
+
+      prog.addTest(TEST_NE, ra[trop->getOp2], ra[trop->getOp2], 16);
 
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
         
