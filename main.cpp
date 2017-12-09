@@ -203,5 +203,20 @@ TEST_CASE("Build program from low representation") {
   std::ofstream out("./test/gencode/" + newProgram.getName() + ".cpp");
   out << prog;
   out.close();
+
+  std::ofstream hd("./test/gencode/" + newProgram.getName() + ".h");
+  hd << "#pragma once\n void " + newProgram.getName() + "(void*);\n";
+  hd.close();
   
+  int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
+
+  REQUIRE(res == 0);
+  
+}
+
+class DataGraph {
+public:
+};
+
+TEST_CASE("Build program from dataflow graph") {
 }
