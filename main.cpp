@@ -1,11 +1,10 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 #define CATCH_CONFIG_MAIN
 
 #include "catch.hpp"
 
+#include "algorithm.h"
+
+using namespace afk;
 using namespace std;
 
 string inlineASMFunction(const std::string& funcName,
@@ -205,7 +204,7 @@ TEST_CASE("Build program from low representation") {
   out.close();
 
   std::ofstream hd("./test/gencode/" + newProgram.getName() + ".h");
-  hd << "#pragma once\n void " + newProgram.getName() + "(void*);\n";
+  hd << "#pragma once\nvoid " + newProgram.getName() + "(void*);\n";
   hd.close();
   
   int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
@@ -214,9 +213,211 @@ TEST_CASE("Build program from low representation") {
   
 }
 
-class DataGraph {
-public:
+enum DGType {
+  DG_INPUT,
+  DG_OUTPUT,
+  DG_BINOP
 };
 
+class DGNode {
+public:
+  virtual DGType getType() const = 0;
+
+  virtual ~DGNode() {}
+};
+
+class DGIn : public DGNode {
+
+  std::string name;
+  int length;
+
+public:
+  DGIn(const std::string& name_, const int length_) :
+    name(name_), length(length_) {}
+
+  std::string getName() const { return name; }
+
+  void setName(const std::string& nn) { name = nn; }
+
+  virtual DGType getType() const { return DG_INPUT; }
+};
+
+class DGOut : public DGNode {
+  std::string name;
+  int length;
+  DGNode* in;
+
+public:
+
+  DGOut(const std::string& name_, const int length_, DGNode* const in_) :
+    name(name_), length(length_), in(in_) {}
+  
+  virtual DGType getType() const { return DG_OUTPUT; }
+
+  void setName(const std::string& nn) { name = nn; }
+};
+
+class DGBinop : public DGNode {
+public:
+  virtual DGType getType() const { return DG_BINOP; }
+};
+
+class DataGraph {
+protected:
+  std::vector<DGNode*> nodes;
+  std::map<DGNode*, std::vector<DGNode*> > inEdges;
+  std::map<DGNode*, std::vector<DGNode*> > outEdges;
+  
+
+public:
+
+  std::vector<DGNode*> getNodes() const { return nodes; }
+
+  std::vector<DGNode*> getInputs(DGNode* const nd) const {
+    auto it = inEdges.find(nd);
+
+    assert(it != std::end(inEdges));
+
+    return it->second;
+  }
+
+  void insertNode(DGNode* nd) {
+    nodes.push_back(nd);
+    inEdges[nd] = {};
+    outEdges[nd] = {};
+  }
+
+  DGIn* addInput(const std::string& name, const int width) {
+    auto dgIn = new DGIn(name, width);
+
+    insertNode(dgIn);
+
+    return dgIn;
+  }
+
+  DGOut* addOutput(const std::string& name,
+                   const int width,
+                   DGNode* const input) {
+
+    auto dgOut = new DGOut(name, width, input);
+
+    insertNode(dgOut);
+
+    return dgOut;
+  }
+
+  DGBinop* addBinop(const std::string& op,
+                    DGNode* const op0,
+                    DGNode* const op1) {
+    auto dgOut = new DGBinop();
+
+    insertNode(dgOut);
+
+    return dgOut;
+  }
+  
+  ~DataGraph() {
+    for (auto& nd : nodes) {
+      delete nd;
+    }
+  }
+};
+
+std::vector<DGNode*> allInputs(const DataGraph& dg) {
+  vector<DGNode*> nds;
+  for (auto& node : dg.getNodes()) {
+    if (node->getType() == DG_INPUT) {
+      nds.push_back(node);
+    }
+  }
+
+  return nds;
+}
+
+struct RegisterAssignment {
+  std::vector<DGNode*> topoOrder;
+  std::map<DGNode*, std::string> registerAssignment;
+};
+
+RegisterAssignment assignRegisters(DataGraph& dg) {
+  vector<DGNode*> nodeOrder;
+  vector<DGNode*> ins = allInputs(dg);
+
+  set<DGNode*> alreadyAdded;
+  concat(nodeOrder, ins);
+  for (auto& node : nodeOrder) {
+    alreadyAdded.insert(node);
+  }
+
+  vector<DGNode*> nodesLeft;
+  for (auto& node : dg.getNodes()) {
+    if (!elem(node, alreadyAdded)) {
+      nodesLeft.push_back(node);
+    }
+  }
+
+  while (nodesLeft.size() > 0) {
+    DGNode* nd = nullptr;
+
+    cout << "Nodes left size = " << nodesLeft.size() << endl;
+
+    for (auto& node : nodesLeft) {
+      nd = nodesLeft.back();
+
+      bool allInputsAdded = true;
+      for (auto& input : dg.getInputs(nd)) {
+        if (!elem(input, alreadyAdded)) {
+          allInputsAdded = false;
+          break;
+        }
+      }
+
+      if (allInputsAdded) {
+        alreadyAdded.insert(nd);
+        nodeOrder.push_back(nd);
+        nodesLeft.pop_back();
+        break;
+      }
+    }
+
+  }
+
+  // Horrible hack
+  vector<string> x86_32Bit{"eax", "ecx", "edx", "edi", "esi", "ebx"};
+
+  map<DGNode*, string> regAssignment;
+  for (auto& node : nodeOrder) {
+    assert(x86_32Bit.size() > 0);
+
+    if (node->getType() == DG_INPUT) {
+      string nextReg = x86_32Bit.back();
+      x86_32Bit.pop_back();
+
+      regAssignment.insert({node, nextReg});
+      //static_cast<DGIn*>(node)->setName(nextReg);
+    } else if (node->getType() == DG_OUTPUT) {
+    } else if (node->getType() == DG_BINOP) {
+      //DGBinop* bp = static_cast<DGBinop*>(node);
+      //bp->setName(bp->getOp1()->getName());
+    }
+  }
+
+  return {nodeOrder, regAssignment};
+}
+
 TEST_CASE("Build program from dataflow graph") {
+  DataGraph dg;
+  DGIn* in0 = dg.addInput("in0", 32);
+  DGIn* in1 = dg.addInput("in1", 32);
+  DGBinop* op = dg.addBinop("+", in0, in1);
+  DGOut* out = dg.addOutput("out", 32, op);
+
+  auto regAssign = assignRegisters(dg);
+  vector<DGNode*> regOrder = regAssign.topoOrder;
+
+  std::map<DGNode*, std::string> ra =
+    regAssign.registerAssignment;
+  REQUIRE(ra[in0] == "ebx");
+
+  REQUIRE(regOrder.size() == 4);
 }
