@@ -123,6 +123,33 @@ all-tests/fast:
 	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/build
 .PHONY : all-tests/fast
 
+src/DataGraph.o: src/DataGraph.cpp.o
+
+.PHONY : src/DataGraph.o
+
+# target to build an object file
+src/DataGraph.cpp.o:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/DataGraph.cpp.o
+.PHONY : src/DataGraph.cpp.o
+
+src/DataGraph.i: src/DataGraph.cpp.i
+
+.PHONY : src/DataGraph.i
+
+# target to preprocess a source file
+src/DataGraph.cpp.i:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/DataGraph.cpp.i
+.PHONY : src/DataGraph.cpp.i
+
+src/DataGraph.s: src/DataGraph.cpp.s
+
+.PHONY : src/DataGraph.s
+
+# target to generate assembly for a file
+src/DataGraph.cpp.s:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/DataGraph.cpp.s
+.PHONY : src/DataGraph.cpp.s
+
 test/main.o: test/main.cpp.o
 
 .PHONY : test/main.o
@@ -159,6 +186,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... all-tests"
+	@echo "... src/DataGraph.o"
+	@echo "... src/DataGraph.i"
+	@echo "... src/DataGraph.s"
 	@echo "... test/main.o"
 	@echo "... test/main.i"
 	@echo "... test/main.s"

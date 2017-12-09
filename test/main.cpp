@@ -2,7 +2,7 @@
 
 #include "catch.hpp"
 
-#include "algorithm.h"
+#include "DataGraph.h"
 
 using namespace afk;
 using namespace std;
@@ -102,6 +102,72 @@ public:
       return "movl " + to_string(offset) + "(%rdi), %" + receiver;
     }
 
+    if (width == 16) {
+      return "mov " + to_string(offset) + "(%rdi), %" + receiver;
+    }
+
+    assert(false);
+  }
+
+};
+
+class Mov : public Instruction {
+protected:
+  int width;
+  std::string source;
+  std::string receiver;
+
+public:
+
+  Mov(const int width_,
+      const std::string& source_,
+      const std::string& receiver_) :
+    width(width_), source(source_), receiver(receiver_) {}
+
+  std::string toString() const {
+    if (width == 128) {
+      return "movdqu " + string("%") + source + ", %" + receiver;
+    }
+
+    if (width == 32) {
+      return "movdl " + string("%") + source + ", %" + receiver;
+    }
+
+    if (width == 16) {
+      return "mov " + string("%") + source + ", %" + receiver;
+    }
+
+    assert(false);
+  }
+
+};
+
+class CMov : public Instruction {
+protected:
+  int width;
+  std::string source;
+  std::string receiver;
+
+public:
+
+  CMov(const int width_,
+      const std::string& source_,
+      const std::string& receiver_) :
+    width(width_), source(source_), receiver(receiver_) {}
+
+  std::string toString() const {
+    if (width == 128) {
+      return "cmovdque " + string("%") + source + ", %" + receiver;
+    }
+
+    if (width == 32) {
+      return "cmovle " + string("%") + source + ", %" + receiver;
+    }
+
+    if (width == 16) {
+      return "cmove " + string("%") + source + ", %" + receiver;
+    }
+
     assert(false);
   }
 
@@ -131,6 +197,10 @@ public:
       return string("movl ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
     }
 
+    if (width == 16) {
+      return string("mov ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+    }
+    
     assert(false);
   }
 
@@ -156,6 +226,14 @@ public:
     instructions.push_back(new Load(offset, alignment, width, receiver));
   }
 
+  void addMov(const std::string& src, const std::string& dest, const int width) {
+    instructions.push_back(new Mov(width, src, dest));
+  }
+
+  void addCMov(const std::string& src, const std::string& dest, const int width) {
+    instructions.push_back(new CMov(width, src, dest));
+  }
+  
   void addStore(const int offset,
                 const int alignment,
                 const int width,
@@ -229,172 +307,6 @@ TEST_CASE("Build program from low representation") {
 
   REQUIRE(res == 0);
   
-}
-
-enum DGType {
-  DG_INPUT,
-  DG_OUTPUT,
-  DG_BINOP
-};
-
-class DGNode {
-public:
-  virtual DGType getType() const = 0;
-
-  virtual ~DGNode() {}
-};
-
-class DGIn : public DGNode {
-
-  std::string name;
-  int length;
-
-public:
-  DGIn(const std::string& name_, const int length_) :
-    name(name_), length(length_) {}
-
-  std::string getName() const { return name; }
-
-  void setName(const std::string& nn) { name = nn; }
-
-  virtual DGType getType() const { return DG_INPUT; }
-
-  int getLength() const { return length; }
-};
-
-class DGOut : public DGNode {
-  std::string name;
-  int length;
-  DGNode* in;
-
-public:
-
-  DGOut(const std::string& name_, const int length_, DGNode* const in_) :
-    name(name_), length(length_), in(in_) {}
-
-  DGNode* getInput() const { return in; }
-
-  virtual DGType getType() const { return DG_OUTPUT; }
-
-  void setName(const std::string& nn) { name = nn; }
-
-  int getLength() const { return length; }
-};
-
-class DGBinop : public DGNode {
-  std::string op;
-  DGNode* op0;
-  DGNode* op1;
-  
-public:
-
-  DGBinop(const std::string& op_,
-          DGNode* const op0_,
-          DGNode* const op1_) : op(op_), op0(op0_), op1(op1_) {}
-
-  virtual DGType getType() const { return DG_BINOP; }
-
-  DGNode* getOp0() const { return op0; }
-  DGNode* getOp1() const { return op1; }
-};
-
-DGIn* toInput(DGNode* const node) {
-  assert(node->getType() == DG_INPUT);
-
-  return static_cast<DGIn*>(node);
-}
-
-DGBinop* toBinop(DGNode* const node) {
-  assert(node->getType() == DG_BINOP);
-
-  return static_cast<DGBinop*>(node);
-}
-
-DGOut* toOutput(DGNode* const node) {
-  assert(node->getType() == DG_OUTPUT);
-
-  return static_cast<DGOut*>(node);
-}
-
-class DataGraph {
-protected:
-  std::vector<DGNode*> nodes;
-  std::map<DGNode*, std::vector<DGNode*> > inEdges;
-  std::map<DGNode*, std::vector<DGNode*> > outEdges;
-  
-
-public:
-
-  std::vector<DGNode*> getNodes() const { return nodes; }
-
-  std::vector<DGNode*> getInputs(DGNode* const nd) const {
-    auto it = inEdges.find(nd);
-
-    assert(it != std::end(inEdges));
-
-    return it->second;
-  }
-
-  void insertNode(DGNode* nd) {
-    nodes.push_back(nd);
-    inEdges[nd] = {};
-    outEdges[nd] = {};
-  }
-
-  DGIn* addInput(const std::string& name, const int width) {
-    auto dgIn = new DGIn(name, width);
-
-    insertNode(dgIn);
-
-    return dgIn;
-  }
-
-  DGOut* addOutput(const std::string& name,
-                   const int width,
-                   DGNode* const input) {
-
-    auto dgOut = new DGOut(name, width, input);
-
-    insertNode(dgOut);
-
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(input));
-    map_insert(outEdges, static_cast<DGNode*>(input), static_cast<DGNode*>(dgOut));
-
-    return dgOut;
-  }
-
-  DGBinop* addBinop(const std::string& op,
-                    DGNode* const op0,
-                    DGNode* const op1) {
-    auto dgOut = new DGBinop(op, op0, op1);
-
-    insertNode(dgOut);
-
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
-
-    map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
-    map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
-    
-    return dgOut;
-  }
-  
-  ~DataGraph() {
-    for (auto& nd : nodes) {
-      delete nd;
-    }
-  }
-};
-
-std::vector<DGNode*> allInputs(const DataGraph& dg) {
-  vector<DGNode*> nds;
-  for (auto& node : dg.getNodes()) {
-    if (node->getType() == DG_INPUT) {
-      nds.push_back(node);
-    }
-  }
-
-  return nds;
 }
 
 struct RegisterAssignment {
@@ -473,15 +385,23 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
     } else if (node->getType() == DG_BINOP) {
       DGBinop* bp = static_cast<DGBinop*>(node);
       regAssignment.insert({node, regAssignment[bp->getOp1()]});
+    } else if (node->getType() == DG_TRINOP) {
+      DGTrinop* bp = toTrinop(node);
+
+      string nextReg = x86_32Bit.back();
+      x86_32Bit.pop_back();
+
+      regAssignment.insert({node, nextReg});
     }
   }
 
   return {nodeOrder, regAssignment, layout};
 }
 
-LowProgram buildLowProgram(const DataGraph& dg,
+LowProgram buildLowProgram(const std::string& name,
+                           const DataGraph& dg,
                            RegisterAssignment& regAssign) {
-  LowProgram prog("target");
+  LowProgram prog(name);
 
   for (auto& node : regAssign.topoOrder) {
     if (node->getType() == DG_INPUT) {
@@ -503,17 +423,63 @@ LowProgram buildLowProgram(const DataGraph& dg,
 
       auto bop = toBinop(node);
 
+      // TODO: Remove hardcoding
       prog.addArithmetic(ARITH_INT_ADD,
                          32,
                          32,
                          regAssign.registerAssignment[bop->getOp0()],
                          regAssign.registerAssignment[bop->getOp1()]);
+    } else if (node->getType() == DG_TRINOP) {
+      auto trop = toTrinop(node);
+
+      assert(trop->getOpName() == "mux");
+
+      auto& ra = regAssign.registerAssignment;
+      prog.addMov(ra[trop->getOp0()], ra[trop], 16);
+
+      prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
+        
     } else {
       assert(false);
     }
   }
 
   return prog;
+}
+
+TEST_CASE("Test conditional move node") {
+  DataGraph dg;
+  DGIn* in0 = dg.addInput("in0", 16);
+  DGIn* in1 = dg.addInput("in1", 16);
+  DGIn* sel = dg.addInput("sel", 16);
+
+  DGTrinop* mx = dg.addTrinop("mux", in0, in1, sel);
+
+  DGOut* of = dg.addOutput("out", 16, mx);
+
+  auto regAssign = assignRegisters(dg);
+  vector<DGNode*> regOrder = regAssign.topoOrder;
+
+  LowProgram lowProg = buildLowProgram("cond_move", dg, regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Mux program" << endl;
+  cout << prog << endl;
+
+  std::ofstream out("./test/gencode/" + lowProg.getName() + ".cpp");
+  out << prog;
+  out.close();
+
+  std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
+  hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
+  hd.close();
+  
+  int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
+
+  REQUIRE(res == 0);
+  
 }
 
 TEST_CASE("Build program from dataflow graph") {
@@ -532,7 +498,7 @@ TEST_CASE("Build program from dataflow graph") {
 
   REQUIRE(regOrder.size() == 4);
 
-  LowProgram lowProg = buildLowProgram(dg, regAssign);
+  LowProgram lowProg = buildLowProgram("target", dg, regAssign);
 
   string prog =
     buildASMProg(lowProg);
