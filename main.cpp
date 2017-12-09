@@ -240,6 +240,8 @@ public:
   void setName(const std::string& nn) { name = nn; }
 
   virtual DGType getType() const { return DG_INPUT; }
+
+  int getLength() const { return length; }
 };
 
 class DGOut : public DGNode {
@@ -255,11 +257,37 @@ public:
   virtual DGType getType() const { return DG_OUTPUT; }
 
   void setName(const std::string& nn) { name = nn; }
+
+  int getLength() const { return length; }
 };
 
+DGIn* toInput(DGNode* const node) {
+  assert(node->getType() == DG_INPUT);
+
+  return static_cast<DGIn*>(node);
+}
+
+DGOut* toOutput(DGNode* const node) {
+  assert(node->getType() == DG_OUTPUT);
+
+  return static_cast<DGOut*>(node);
+}
+
 class DGBinop : public DGNode {
+  std::string op;
+  DGNode* op0;
+  DGNode* op1;
+  
 public:
+
+  DGBinop(const std::string& op_,
+          DGNode* const op0_,
+          DGNode* const op1_) : op(op_), op0(op0_), op1(op1_) {}
+
   virtual DGType getType() const { return DG_BINOP; }
+
+  DGNode* getOp0() const { return op0; }
+  DGNode* getOp1() const { return op1; }
 };
 
 class DataGraph {
@@ -309,7 +337,7 @@ public:
   DGBinop* addBinop(const std::string& op,
                     DGNode* const op0,
                     DGNode* const op1) {
-    auto dgOut = new DGBinop();
+    auto dgOut = new DGBinop(op, op0, op1);
 
     insertNode(dgOut);
 
@@ -337,6 +365,7 @@ std::vector<DGNode*> allInputs(const DataGraph& dg) {
 struct RegisterAssignment {
   std::vector<DGNode*> topoOrder;
   std::map<DGNode*, std::string> registerAssignment;
+  std::map<DGNode*, int> offsets;
 };
 
 RegisterAssignment assignRegisters(DataGraph& dg) {
@@ -382,6 +411,19 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
   }
 
+  map<DGNode*, int> layout;
+  int offset = 0;
+  for (auto& node : nodeOrder) {
+    if (node->getType() == DG_INPUT) {
+      layout[node] = offset;
+      offset += toInput(node)->getLength();
+    } else if (node->getType() == DG_OUTPUT) {
+      layout[node] = offset;
+      offset += toOutput(node)->getLength();
+    }
+
+  }
+
   // Horrible hack
   vector<string> x86_32Bit{"eax", "ecx", "edx", "edi", "esi", "ebx"};
 
@@ -394,15 +436,14 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       x86_32Bit.pop_back();
 
       regAssignment.insert({node, nextReg});
-      //static_cast<DGIn*>(node)->setName(nextReg);
     } else if (node->getType() == DG_OUTPUT) {
     } else if (node->getType() == DG_BINOP) {
-      //DGBinop* bp = static_cast<DGBinop*>(node);
-      //bp->setName(bp->getOp1()->getName());
+      DGBinop* bp = static_cast<DGBinop*>(node);
+      regAssignment.insert({node, regAssignment[bp->getOp1()]});
     }
   }
 
-  return {nodeOrder, regAssignment};
+  return {nodeOrder, regAssignment, layout};
 }
 
 TEST_CASE("Build program from dataflow graph") {
