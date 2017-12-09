@@ -30,6 +30,11 @@ string inlineVoidASMFunction(const std::string& funcName,
   return inlineASMFunction(funcName, asmOps);
 }
 
+enum TestType {
+  TEST_E,
+  TEST_NE
+};
+
 enum ArithType {
   ARITH_INT_ADD,
   ARITH_FLOAT_ADD,
@@ -104,6 +109,33 @@ public:
 
     if (width == 16) {
       return "mov " + to_string(offset) + "(%rdi), %" + receiver;
+    }
+
+    assert(false);
+  }
+
+};
+
+class Test : public Instruction {
+protected:
+  TestType tp;
+  int width;
+  std::string source;
+  std::string receiver;
+
+public:
+  Test(const TestType tp_,
+       const int width_,
+       const std::string& source_,
+       const std::string& receiver_) :
+    tp(tp_), width(width_), source(source_), receiver(receiver_) {}
+
+  std::string toString() const {
+
+    assert(tp == TEST_NE);
+
+    if (width == 16) {
+      return "test " + string("%") + source + ", %" + receiver;
     }
 
     assert(false);
@@ -230,6 +262,13 @@ public:
     instructions.push_back(new Mov(width, src, dest));
   }
 
+  void addTest(const TestType tp,
+               const std::string& src,
+               const std::string& dest,
+               const int width) {
+    instructions.push_back(new Test(tp, width, src, dest));
+  }
+  
   void addCMov(const std::string& src, const std::string& dest, const int width) {
     instructions.push_back(new CMov(width, src, dest));
   }
@@ -438,7 +477,7 @@ LowProgram buildLowProgram(const std::string& name,
       auto& ra = regAssign.registerAssignment;
       prog.addMov(ra[trop->getOp0()], ra[trop], 16);
 
-      prog.addTest(TEST_NE, ra[trop->getOp2], ra[trop->getOp2], 16);
+      prog.addTest(TEST_NE, ra[trop->getOp2()], ra[trop->getOp2()], 16);
 
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
         
@@ -479,7 +518,7 @@ TEST_CASE("Test conditional move node") {
   hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
   hd.close();
   
-  int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
+  int res = system(("clang++ -std=c++11 ./test/gencode/" + lowProg.getName() + ".cpp " + "./test/gencode/test_mux.cpp").c_str());
 
   REQUIRE(res == 0);
   
