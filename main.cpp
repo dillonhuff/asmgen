@@ -66,6 +66,8 @@ public:
     if (tp == ARITH_INT_ADD) {
       if ((registerWidth == 128) && (opWidth == 32)) {
         opName = "paddd ";
+      } else if ((registerWidth == 32) && (opWidth == 32)) {
+        opName = "addl ";
       } else {
         assert(false);
       }
@@ -92,7 +94,15 @@ public:
     offset(offset_), alignment(alignment_), width(width_), receiver(receiver_) {}
 
   std::string toString() const {
-    return "movdqu " + to_string(offset) + "(%rdi), %" + receiver;
+    if (width == 128) {
+      return "movdqu " + to_string(offset) + "(%rdi), %" + receiver;
+    }
+
+    if (width == 32) {
+      return "movl " + to_string(offset) + "(%rdi), %" + receiver;
+    }
+
+    assert(false);
   }
 
 };
@@ -113,7 +123,15 @@ public:
     offset(offset_), alignment(alignment_), width(width_), source(source_) {}
 
   std::string toString() const {
-    return string("movdqu ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+    if (width == 128) {
+      return string("movdqu ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+    }
+
+    if (width == 32) {
+      return string("movl ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+    }
+
+    assert(false);
   }
 
 };
@@ -253,25 +271,15 @@ public:
 
   DGOut(const std::string& name_, const int length_, DGNode* const in_) :
     name(name_), length(length_), in(in_) {}
-  
+
+  DGNode* getInput() const { return in; }
+
   virtual DGType getType() const { return DG_OUTPUT; }
 
   void setName(const std::string& nn) { name = nn; }
 
   int getLength() const { return length; }
 };
-
-DGIn* toInput(DGNode* const node) {
-  assert(node->getType() == DG_INPUT);
-
-  return static_cast<DGIn*>(node);
-}
-
-DGOut* toOutput(DGNode* const node) {
-  assert(node->getType() == DG_OUTPUT);
-
-  return static_cast<DGOut*>(node);
-}
 
 class DGBinop : public DGNode {
   std::string op;
@@ -289,6 +297,24 @@ public:
   DGNode* getOp0() const { return op0; }
   DGNode* getOp1() const { return op1; }
 };
+
+DGIn* toInput(DGNode* const node) {
+  assert(node->getType() == DG_INPUT);
+
+  return static_cast<DGIn*>(node);
+}
+
+DGBinop* toBinop(DGNode* const node) {
+  assert(node->getType() == DG_BINOP);
+
+  return static_cast<DGBinop*>(node);
+}
+
+DGOut* toOutput(DGNode* const node) {
+  assert(node->getType() == DG_OUTPUT);
+
+  return static_cast<DGOut*>(node);
+}
 
 class DataGraph {
 protected:
@@ -331,6 +357,9 @@ public:
 
     insertNode(dgOut);
 
+    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(input));
+    map_insert(outEdges, static_cast<DGNode*>(input), static_cast<DGNode*>(dgOut));
+
     return dgOut;
   }
 
@@ -341,6 +370,12 @@ public:
 
     insertNode(dgOut);
 
+    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
+    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
+
+    map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
+    map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
+    
     return dgOut;
   }
   
@@ -391,10 +426,8 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
     cout << "Nodes left size = " << nodesLeft.size() << endl;
 
     for (auto& node : nodesLeft) {
-      nd = nodesLeft.back();
-
       bool allInputsAdded = true;
-      for (auto& input : dg.getInputs(nd)) {
+      for (auto& input : dg.getInputs(node)) {
         if (!elem(input, alreadyAdded)) {
           allInputsAdded = false;
           break;
@@ -402,9 +435,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       }
 
       if (allInputsAdded) {
-        alreadyAdded.insert(nd);
-        nodeOrder.push_back(nd);
-        nodesLeft.pop_back();
+        alreadyAdded.insert(node);
+        nodeOrder.push_back(node);
+        remove(node, nodesLeft);
         break;
       }
     }
@@ -416,10 +449,10 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   for (auto& node : nodeOrder) {
     if (node->getType() == DG_INPUT) {
       layout[node] = offset;
-      offset += toInput(node)->getLength();
+      offset += toInput(node)->getLength() / 8;
     } else if (node->getType() == DG_OUTPUT) {
       layout[node] = offset;
-      offset += toOutput(node)->getLength();
+      offset += toOutput(node)->getLength() / 8;
     }
 
   }
@@ -446,6 +479,43 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   return {nodeOrder, regAssignment, layout};
 }
 
+LowProgram buildLowProgram(const DataGraph& dg,
+                           RegisterAssignment& regAssign) {
+  LowProgram prog("target");
+
+  for (auto& node : regAssign.topoOrder) {
+    if (node->getType() == DG_INPUT) {
+      auto in = toInput(node);
+
+      prog.addLoad(regAssign.offsets[in],
+                   0,
+                   in->getLength(),
+                   regAssign.registerAssignment[in]);
+
+    } else if (node->getType() == DG_OUTPUT) {
+      auto out = toOutput(node);
+
+      prog.addStore(regAssign.offsets[out],
+                    0,
+                    out->getLength(),
+                    regAssign.registerAssignment[out->getInput()]);
+    } else if (node->getType() == DG_BINOP) {
+
+      auto bop = toBinop(node);
+
+      prog.addArithmetic(ARITH_INT_ADD,
+                         32,
+                         32,
+                         regAssign.registerAssignment[bop->getOp0()],
+                         regAssign.registerAssignment[bop->getOp1()]);
+    } else {
+      assert(false);
+    }
+  }
+
+  return prog;
+}
+
 TEST_CASE("Build program from dataflow graph") {
   DataGraph dg;
   DGIn* in0 = dg.addInput("in0", 32);
@@ -461,4 +531,12 @@ TEST_CASE("Build program from dataflow graph") {
   REQUIRE(ra[in0] == "ebx");
 
   REQUIRE(regOrder.size() == 4);
+
+  LowProgram lowProg = buildLowProgram(dg, regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << prog << endl;
+
 }
