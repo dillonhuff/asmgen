@@ -627,6 +627,31 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   return {nodeOrder, regAssignment, layout};
 }
 
+string to64Bit(const std::string& str) {
+
+  if (str == "%r15d") {
+    return "%r15";
+  }
+  
+  if (str == "%r14d") {
+    return "%r14";
+  }
+  
+  if (str == "%r13d") {
+    return "%r13";
+  }
+
+  if (str == "%r12d") {
+    return "%r12";
+  }
+
+  if (str == "%r11d") {
+    return "%r11";
+  }
+  
+  assert(false);
+}
+
 LowProgram buildLowProgram(const std::string& name,
                            const DataGraph& dg,
                            RegisterAssignment& regAssign) {
@@ -733,7 +758,7 @@ LowProgram buildLowProgram(const std::string& name,
       assert(waddrReg != "");
       
       prog.addMov(ra[memOut->getWData()],
-                  to_string(memOffset) + "(%rdi, " + ra[memOut->getWAddr()] + ", 2)",
+                  to_string(memOffset) + "(%rdi, " + to64Bit(ra[memOut->getWAddr()]) + ", 2)",
                   16);
 
     } else if (node->getType() == DG_MEM_INPUT) {
@@ -753,7 +778,7 @@ LowProgram buildLowProgram(const std::string& name,
       
       //assert(waddrReg != "");
       
-      prog.addMov(to_string(memOffset) + "(%rdi, " + ra[memIn->getRAddr()] + ", 2)",
+      prog.addMov(to_string(memOffset) + "(%rdi, " + to64Bit(ra[memIn->getRAddr()]) + ", 2)",
                   ra[memIn],
                   16);
 
