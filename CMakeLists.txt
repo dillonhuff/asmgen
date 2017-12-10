@@ -11,7 +11,8 @@ SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CXX_OCL_LINK_FLAGS}")
 
 INCLUDE_DIRECTORIES(./src/)
 
-SET(SRC_FILES ./src/DataGraph.cpp)
+SET(SRC_FILES ./src/DataGraph.cpp
+              ./src/LowProgram.cpp)
 
 SET(TEST_FILES test/main.cpp)
 

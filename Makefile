@@ -150,6 +150,33 @@ src/DataGraph.cpp.s:
 	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/DataGraph.cpp.s
 .PHONY : src/DataGraph.cpp.s
 
+src/LowProgram.o: src/LowProgram.cpp.o
+
+.PHONY : src/LowProgram.o
+
+# target to build an object file
+src/LowProgram.cpp.o:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/LowProgram.cpp.o
+.PHONY : src/LowProgram.cpp.o
+
+src/LowProgram.i: src/LowProgram.cpp.i
+
+.PHONY : src/LowProgram.i
+
+# target to preprocess a source file
+src/LowProgram.cpp.i:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/LowProgram.cpp.i
+.PHONY : src/LowProgram.cpp.i
+
+src/LowProgram.s: src/LowProgram.cpp.s
+
+.PHONY : src/LowProgram.s
+
+# target to generate assembly for a file
+src/LowProgram.cpp.s:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/LowProgram.cpp.s
+.PHONY : src/LowProgram.cpp.s
+
 test/main.o: test/main.cpp.o
 
 .PHONY : test/main.o
@@ -189,6 +216,9 @@ help:
 	@echo "... src/DataGraph.o"
 	@echo "... src/DataGraph.i"
 	@echo "... src/DataGraph.s"
+	@echo "... src/LowProgram.o"
+	@echo "... src/LowProgram.i"
+	@echo "... src/LowProgram.s"
 	@echo "... test/main.o"
 	@echo "... test/main.i"
 	@echo "... test/main.s"
