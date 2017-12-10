@@ -7,6 +7,8 @@ using namespace afk;
 enum DGType {
   DG_INPUT,
   DG_OUTPUT,
+  DG_MEM_INPUT,
+  DG_MEM_OUTPUT,
   DG_BINOP,
   DG_TRINOP,
   DG_CONSTANT
@@ -48,6 +50,18 @@ public:
   int getLength() const { return length; }
 
   virtual DGType getType() const { return DG_CONSTANT; }
+};
+
+class DGMemOut : public DGNode {
+public:
+
+  virtual DGType getType() const { return DG_MEM_OUTPUT; }
+};
+
+class DGMemIn : public DGNode {
+public:
+
+  virtual DGType getType() const { return DG_MEM_INPUT; }
 };
 
 class DGOut : public DGNode {
@@ -139,6 +153,28 @@ public:
     outEdges[nd] = {};
   }
 
+  DGMemIn* addMemInput(const std::string& name,
+                       DGNode* const raddr,
+                       const int memSize,
+                       const int width) {
+    auto dgIn = new DGMemIn();
+
+    insertNode(dgIn);
+
+    return dgIn;
+  }
+
+  DGMemOut* addMemOutput(const std::string& name,
+                        DGNode* const waddr,
+                        const int memSize,
+                        const int width) {
+    auto dgIn = new DGMemOut();
+
+    insertNode(dgIn);
+
+    return dgIn;
+  }
+  
   DGIn* addInput(const std::string& name, const int width) {
     auto dgIn = new DGIn(name, width);
 

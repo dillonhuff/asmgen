@@ -678,7 +678,6 @@ TEST_CASE("code from conv_3_1") {
       } else if (getQualifiedOpName(*inst) == "corebit.term") {
 
         auto inConns = getInputConnections(vd, g);
-
         auto in = findArg("in", inConns);
 
         auto outp = dg.addOutput(inst->toString(),
@@ -688,11 +687,28 @@ TEST_CASE("code from conv_3_1") {
 
       } else if (isMemoryInstance(inst)) {
         if (wd.isReceiver) {
-          //assert(false);
-          continue;
+
+          auto inConns = getInputConnections(vd, g);
+          auto waddr = findArg("waddr", inConns);
+          
+          auto in = dg.addMemOutput(inst->toString(),
+                                    dgVerts[waddr.getWire()],
+                                    10*2,
+                                    2);
+
+          dgVerts[inst] = in;
+          
         } else {
-          //assert(false);
-          continue;
+
+          auto inConns = getInputConnections(vd, g);
+          auto raddr = findArg("raddr", inConns);
+          
+          auto in = dg.addMemInput(inst->toString(),
+                                   dgVerts[raddr.getWire()],
+                                   10*2,
+                                   2);
+
+          dgVerts[inst] = in;
         }
       } else {
         cout << "Unsupported instance = " << nodeString(wd) << endl;
