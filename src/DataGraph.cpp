@@ -8,6 +8,18 @@ DGIn* toInput(DGNode* const node) {
   return static_cast<DGIn*>(node);
 }
 
+DGMemOut* toMemOutput(DGNode* const node) {
+  assert(node->getType() == DG_MEM_OUTPUT);
+
+  return static_cast<DGMemOut*>(node);
+}
+
+DGMemIn* toMemInput(DGNode* const node) {
+  assert(node->getType() == DG_MEM_INPUT);
+
+  return static_cast<DGMemIn*>(node);
+}
+
 DGBinop* toBinop(DGNode* const node) {
   assert(node->getType() == DG_BINOP);
 

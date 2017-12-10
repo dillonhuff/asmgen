@@ -715,11 +715,49 @@ LowProgram buildLowProgram(const std::string& name,
 
       prog.addMov("$1", ra[node], 16);
 
-    } else if (node->getType() == DG_MEM_INPUT) {
-      auto& ra = regAssign.registerAssignment;
-      prog.addMov("MEM_OFF(%rdi, IN_NODE, 2)", ra[node], 16);
     } else if (node->getType() == DG_MEM_OUTPUT) {
-      prog.addMov("NO_REG", "MEM_OFF(%rdi, IN_NODE, 2)", 16);
+      auto& ra = regAssign.registerAssignment;
+
+      auto memOut = toMemOutput(node);
+      int memOffset = 0;
+
+      auto waddrReg = ra[memOut->getWAddr()];
+
+      cout << "Waddr = " << memOut->getWAddr()->toString() << endl;
+
+      cout << "Register assignment = " << endl;
+      for (auto& val : ra) {
+        cout << val.first->toString() << " --> " << val.second << endl;
+      }
+      
+      assert(waddrReg != "");
+      
+      prog.addMov(ra[memOut->getWData()],
+                  to_string(memOffset) + "(%rdi, " + ra[memOut->getWAddr()] + ", 2)",
+                  16);
+
+    } else if (node->getType() == DG_MEM_INPUT) {
+
+      auto& ra = regAssign.registerAssignment;
+
+      auto memIn = toMemInput(node);
+      int memOffset = 0;
+
+      //auto raddr = ra[memIn->getRAddr()];
+      // cout << "Raddr = " << memIn->getRAddr()->toString() << endl;
+
+      // cout << "Register assignment = " << endl;
+      // for (auto& val : ra) {
+      //   cout << val.first->toString() << " --> " << val.second << endl;
+      // }
+      
+      //assert(waddrReg != "");
+      
+      prog.addMov(to_string(memOffset) + "(%rdi, " + ra[memIn->getRAddr()] + ", 2)",
+                  ra[memIn],
+                  16);
+
+
     } else {
       cout << "Unsupported node " << node->toString() << endl;
       assert(false);
@@ -913,9 +951,11 @@ TEST_CASE("code from conv_3_1") {
 
           auto inConns = getInputConnections(vd, g);
           auto waddr = findArg("waddr", inConns);
+          auto wdata = findArg("wdata", inConns);
           
           auto in = dg.addMemOutput(inst->toString(),
                                     dgVerts[waddr.getWire()],
+                                    dgVerts[wdata.getWire()],
                                     10*2,
                                     2);
 

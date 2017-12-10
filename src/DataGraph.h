@@ -59,15 +59,60 @@ public:
 };
 
 class DGMemOut : public DGNode {
+
+  std::string name;
+  DGNode* waddr;
+  DGNode* wdata;
+  int memSize;
+  int readSize;
+
 public:
+
+  DGMemOut(const std::string& name_,
+           DGNode* const waddr_,
+           DGNode* const wdata_,
+           const int memSize_,
+           const int readSize_) :
+    name(name_), waddr(waddr_),
+    wdata(wdata_), memSize(memSize_), readSize(readSize_) {}
+
+  DGNode* getWAddr() const { return waddr; }
+  DGNode* getWData() const { return wdata; }
+
+  int getMemSize() const { return memSize; }
+  int getReadSize() const { return readSize; }
 
   virtual DGType getType() const { return DG_MEM_OUTPUT; }
 
-  virtual std::string toString() const { return "memout"; }
+  virtual std::string toString() const {
+    return name + " " + waddr->toString() + " " +
+      wdata->toString() + " " + std::to_string(memSize) + " " +
+      std::to_string(readSize);
+  }
 };
 
 class DGMemIn : public DGNode {
+
+  std::string name;
+  DGNode* raddr;
+  int memSize;
+  int readSize;
+
 public:
+
+  DGMemIn(const std::string& name_,
+          DGNode* const raddr_,
+          const int memSize_,
+          const int readSize_) :
+    name(name_),
+    raddr(raddr_),
+    memSize(memSize_),
+    readSize(readSize_) {}
+
+  DGNode* getRAddr() const { return raddr; }
+
+  int getMemSize() const { return memSize; }
+  int getReadSize() const { return readSize; }
 
   virtual DGType getType() const { return DG_MEM_INPUT; }
 
@@ -151,6 +196,8 @@ DGIn* toInput(DGNode* const node);
 DGBinop* toBinop(DGNode* const node);
 DGTrinop* toTrinop(DGNode* const node);
 DGOut* toOutput(DGNode* const node);
+DGMemOut* toMemOutput(DGNode* const node);
+DGMemIn* toMemInput(DGNode* const node);
 
 class DataGraph {
 protected:
@@ -185,7 +232,7 @@ public:
                        DGNode* const raddr,
                        const int memSize,
                        const int width) {
-    auto dgIn = new DGMemIn();
+    auto dgIn = new DGMemIn(name, raddr, memSize, width);
 
     insertNode(dgIn);
 
@@ -194,9 +241,10 @@ public:
 
   DGMemOut* addMemOutput(const std::string& name,
                         DGNode* const waddr,
+                         DGNode* const wdata,
                         const int memSize,
                         const int width) {
-    auto dgIn = new DGMemOut();
+    auto dgIn = new DGMemOut(name, waddr, wdata, memSize, width);
 
     insertNode(dgIn);
 
