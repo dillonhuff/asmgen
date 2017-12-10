@@ -8,3 +8,5 @@ CMakeFiles/
 a.out.dSYM/
 all-tests
 cmake_install.cmake
+
+test/gencode/
