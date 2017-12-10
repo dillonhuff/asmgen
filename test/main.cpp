@@ -189,15 +189,15 @@ public:
 
   std::string toString() const {
     if (width == 128) {
-      return "cmovdque " + string("%") + source + ", %" + receiver;
+      return "cmovdqune " + string("%") + source + ", %" + receiver;
     }
 
     if (width == 32) {
-      return "cmovle " + string("%") + source + ", %" + receiver;
+      return "cmovlne " + string("%") + source + ", %" + receiver;
     }
 
     if (width == 16) {
-      return "cmove " + string("%") + source + ", %" + receiver;
+      return "cmovne " + string("%") + source + ", %" + receiver;
     }
 
     assert(false);
@@ -345,6 +345,10 @@ TEST_CASE("Build program from low representation") {
   int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
 
   REQUIRE(res == 0);
+
+  res = system("./a.out");
+
+  REQUIRE(res == 0);
   
 }
 
@@ -409,7 +413,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   }
 
   // Horrible hack
-  vector<string> x86_32Bit{"eax", "ecx", "edx", "edi", "esi", "ebx"};
+  vector<string> x86_32Bit{"eax", "ecx", "edx", "esi", "ebx"}; //"esi", "ebx"};
 
   map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
@@ -519,6 +523,10 @@ TEST_CASE("Test conditional move node") {
   hd.close();
   
   int res = system(("clang++ -std=c++11 ./test/gencode/" + lowProg.getName() + ".cpp " + "./test/gencode/test_mux.cpp").c_str());
+
+  REQUIRE(res == 0);
+
+  res = system("./a.out");
 
   REQUIRE(res == 0);
   
