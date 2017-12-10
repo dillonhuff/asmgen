@@ -129,6 +129,11 @@ public:
       return "mov " + to_string(offset) + "(%rdi), %" + receiver;
     }
 
+    if (width == 8) {
+      return "movzwl " + to_string(offset) + "(%rdi), %" + receiver;
+    }
+    
+    cout << "Unsupported width = " << width << endl;
     assert(false);
   }
 
@@ -187,6 +192,10 @@ public:
       return "mov " + string("%") + source + ", %" + receiver;
     }
 
+    if (width == 8) {
+      return "movzwl " + string("%") + source + ", %" + receiver;
+    }
+    
     assert(false);
   }
 
@@ -249,6 +258,10 @@ public:
 
     if (width == 16) {
       return string("mov ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+    }
+
+    if (width == 8) {
+      return string("movzwl ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
     }
     
     assert(false);
@@ -399,6 +412,13 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
     cout << "Nodes left size = " << nodesLeft.size() << endl;
 
     for (auto& node : nodesLeft) {
+
+      assert(node != nullptr);
+
+      cout << "Trying with node ptr = " << node << endl;
+      cout << "Node has type        = " << node->getType() << endl;
+      cout << "Trying with node     = " << node->toString() << endl;
+
       bool allInputsAdded = true;
       for (auto& input : dg.getInputs(node)) {
         if (!afk::elem(input, alreadyAdded)) {
@@ -435,24 +455,36 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
   map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
-    assert(x86_32Bit.size() > 0);
+
+    // TODO: Reintroduce when I am done with this little experiment
+    //assert(x86_32Bit.size() > 0);
 
     if (node->getType() == DG_INPUT) {
-      string nextReg = x86_32Bit.back();
-      x86_32Bit.pop_back();
+      if (x86_32Bit.size() > 0) {
+        string nextReg = x86_32Bit.back();
+        x86_32Bit.pop_back();
 
-      regAssignment.insert({node, nextReg});
+        regAssignment.insert({node, nextReg});
+      } else {
+        regAssignment.insert({node, "eax"});
+      }
     } else if (node->getType() == DG_OUTPUT) {
     } else if (node->getType() == DG_BINOP) {
+
       DGBinop* bp = static_cast<DGBinop*>(node);
       regAssignment.insert({node, regAssignment[bp->getOp1()]});
+
     } else if (node->getType() == DG_TRINOP) {
       DGTrinop* bp = toTrinop(node);
 
-      string nextReg = x86_32Bit.back();
-      x86_32Bit.pop_back();
+      if (x86_32Bit.size() > 0) {
+        string nextReg = x86_32Bit.back();
+        x86_32Bit.pop_back();
 
-      regAssignment.insert({node, nextReg});
+        regAssignment.insert({node, nextReg});
+      } else {
+        regAssignment.insert({node, "eax"});
+      }
     }
   }
 
@@ -503,7 +535,13 @@ LowProgram buildLowProgram(const std::string& name,
 
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
         
+    } else if (node->getType() == DG_CONSTANT) {
+      prog.addCMov("$1", "eax", 16);
+    } else if ((node->getType() == DG_MEM_INPUT) ||
+               (node->getType() == DG_MEM_OUTPUT)) {
+      
     } else {
+      cout << "Unsupported node " << node->toString() << endl;
       assert(false);
     }
   }
@@ -623,7 +661,7 @@ TEST_CASE("code from conv_3_1") {
       // TODO: Add constant value computation
       auto dc = dg.addConstant(1, 16);
 
-      dgVerts[inst] = dc;
+      dgVerts[inst->sel("out")] = dc;
     } else if (isInstance(wd.getWire())) {
 
       Instance* inst = toInstance(wd.getWire());
@@ -632,7 +670,7 @@ TEST_CASE("code from conv_3_1") {
         auto in = dg.addInput(inst->toString(),
                               containerTypeWidth(*(inst->sel("out")->getType())));
 
-        dgVerts[inst] = in;
+        dgVerts[inst->sel("out")] = in;
       } else if (isRegisterInstance(inst) && wd.isReceiver) {
 
         auto inConns = getInputConnections(vd, g);
@@ -643,7 +681,7 @@ TEST_CASE("code from conv_3_1") {
                                  containerTypeWidth(*(inst->sel("out")->getType())),
                                  dgVerts[in.getWire()]);
 
-        dgVerts[in.getWire()] = outp;
+        //dgVerts[in.getWire()] = outp;
       } else if (isBitwiseOp(*inst) ||
                  isSignInvariantOp(*inst) ||
                  isUnsignedCmp(*inst) ||
@@ -655,11 +693,17 @@ TEST_CASE("code from conv_3_1") {
         auto in0 = findArg("in0", inConns);
         auto in1 = findArg("in1", inConns);
 
+        cout << "in0 = " << in0.getWire()->toString() << endl;
+        cout << "in1 = " << in1.getWire()->toString() << endl;
+
+        assert(dgVerts[in0.getWire()] != nullptr);
+        assert(dgVerts[in1.getWire()] != nullptr);
+
         auto op = dg.addBinop(getOpString(*inst),
                               dgVerts[in0.getWire()],
                               dgVerts[in1.getWire()]);
 
-        dgVerts[inst] = op;
+        dgVerts[inst->sel("out")] = op;
       } else if (getQualifiedOpName(*inst) == "coreir.mux") {
         auto inConns = getInputConnections(vd, g);
 
@@ -672,8 +716,7 @@ TEST_CASE("code from conv_3_1") {
                                dgVerts[in1.getWire()],
                                dgVerts[in2.getWire()]);
 
-        
-        dgVerts[inst] = op;
+        dgVerts[inst->sel("out")] = op;
         
       } else if (getQualifiedOpName(*inst) == "corebit.term") {
 
@@ -696,8 +739,6 @@ TEST_CASE("code from conv_3_1") {
                                     10*2,
                                     2);
 
-          dgVerts[inst] = in;
-          
         } else {
 
           auto inConns = getInputConnections(vd, g);
@@ -708,7 +749,7 @@ TEST_CASE("code from conv_3_1") {
                                    10*2,
                                    2);
 
-          dgVerts[inst] = in;
+          dgVerts[inst->sel("rdata")] = in;
         }
       } else {
         cout << "Unsupported instance = " << nodeString(wd) << endl;
@@ -719,6 +760,20 @@ TEST_CASE("code from conv_3_1") {
       assert(false);
     }
   }
+
+
+  auto regAssign = assignRegisters(dg);
+  vector<DGNode*> regOrder = regAssign.topoOrder;
+
+  std::map<DGNode*, std::string> ra =
+    regAssign.registerAssignment;
+  
+  LowProgram lowProg = buildLowProgram("conv_3_1", dg, regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << prog << endl;
 
   deleteContext(c);
 }

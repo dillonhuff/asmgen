@@ -18,6 +18,8 @@ class DGNode {
 public:
   virtual DGType getType() const = 0;
 
+  virtual std::string toString() const = 0;
+
   virtual ~DGNode() {}
 };
 
@@ -34,6 +36,8 @@ public:
 
   void setName(const std::string& nn) { name = nn; }
 
+  virtual std::string toString() const { return "DGIn: " + name; }
+
   virtual DGType getType() const { return DG_INPUT; }
 
   int getLength() const { return length; }
@@ -46,6 +50,8 @@ class DGConst : public DGNode {
 public:
   DGConst(const int value_, const int length_) : value(value_), length(length_) {}
 
+  virtual std::string toString() const { return "Const: " + std::to_string(value); }
+
   int getValue() const { return value; }
   int getLength() const { return length; }
 
@@ -56,12 +62,16 @@ class DGMemOut : public DGNode {
 public:
 
   virtual DGType getType() const { return DG_MEM_OUTPUT; }
+
+  virtual std::string toString() const { return "memout"; }
 };
 
 class DGMemIn : public DGNode {
 public:
 
   virtual DGType getType() const { return DG_MEM_INPUT; }
+
+  virtual std::string toString() const { return "memin"; }
 };
 
 class DGOut : public DGNode {
@@ -81,6 +91,8 @@ public:
   void setName(const std::string& nn) { name = nn; }
 
   int getLength() const { return length; }
+
+  virtual std::string toString() const { return "DGOut = " + name; }
 };
 
 class DGBinop : public DGNode {
@@ -98,6 +110,10 @@ public:
 
   DGNode* getOp0() const { return op0; }
   DGNode* getOp1() const { return op1; }
+
+  virtual std::string toString() const {
+    return "(" + getOp0()->toString() + " " + op + " " + getOp1()->toString() + ")";
+  }
 };
 
 class DGTrinop : public DGNode {
@@ -121,6 +137,12 @@ public:
   DGNode* getOp0() const { return op0; }
   DGNode* getOp1() const { return op1; }
   DGNode* getOp2() const { return op2; }
+
+  virtual std::string toString() const {
+    return "(" + getOp0()->toString() + " " + op + " " + getOp1()->toString() +
+      " " + getOp2()->toString() + ")";
+  }
+
 };
 
 DGIn* toInput(DGNode* const node);
