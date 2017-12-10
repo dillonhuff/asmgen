@@ -2,3 +2,9 @@
 a.out
 *.o
 ./test/gencode/
+
+CMakeCache.txt
+CMakeFiles/
+a.out.dSYM/
+all-tests
+cmake_install.cmake
