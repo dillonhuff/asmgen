@@ -107,7 +107,7 @@ public:
       cout << "Unsupported op type = " << tp << endl;
       assert(false);
     }
-    return opName + "%" + source + ", %" + receiver;
+    return opName + source + ", " + receiver;
   }
 };
 
@@ -128,19 +128,19 @@ public:
 
   std::string toString() const {
     if (width == 128) {
-      return "movdqu " + to_string(offset) + "(%rdi), %" + receiver;
+      return "movdqu " + to_string(offset) + "(%rdi), " + receiver;
     }
 
     if (width == 32) {
-      return "movl " + to_string(offset) + "(%rdi), %" + receiver;
+      return "movl " + to_string(offset) + "(%rdi), " + receiver;
     }
 
     if (width == 16) {
-      return "mov " + to_string(offset) + "(%rdi), %" + receiver;
+      return "mov " + to_string(offset) + "(%rdi), " + receiver;
     }
 
     if (width == 8) {
-      return "movzwl " + to_string(offset) + "(%rdi), %" + receiver;
+      return "movzwl " + to_string(offset) + "(%rdi), " + receiver;
     }
     
     cout << "Unsupported width = " << width << endl;
@@ -168,14 +168,14 @@ public:
     if (tp == TEST_NE) {
 
       if ((width == 16) || (width == 32)) {
-        return "test " + string("%") + source + ", %" + receiver;
+        return "test " + source + ", " + receiver;
       }
 
       assert(false);
     } else if (tp == TEST_E) {
 
       if ((width == 16) || (width == 32)) {
-        return "testne " + string("%") + source + ", %" + receiver;
+        return "testne " + source + ", " + receiver;
       }
       
       assert(false);
@@ -200,19 +200,19 @@ public:
 
   std::string toString() const {
     if (width == 128) {
-      return "movdqu " + string("%") + source + ", %" + receiver;
+      return "movdqu " + source + ", " + receiver;
     }
 
     if (width == 32) {
-      return "movdl " + string("%") + source + ", %" + receiver;
+      return "movdl " + source + ", " + receiver;
     }
 
     if (width == 16) {
-      return "mov " + string("%") + source + ", %" + receiver;
+      return "mov " + source + ", " + receiver;
     }
 
     if (width == 8) {
-      return "movzwl " + string("%") + source + ", %" + receiver;
+      return "movzwl " + source + ", " + receiver;
     }
     
     assert(false);
@@ -235,15 +235,15 @@ public:
 
   std::string toString() const {
     if (width == 128) {
-      return "cmovdqune " + string("%") + source + ", %" + receiver;
+      return "cmovdqune " + source + ", " + receiver;
     }
 
     if (width == 32) {
-      return "cmovlne " + string("%") + source + ", %" + receiver;
+      return "cmovlne " + source + ", " + receiver;
     }
 
     if (width == 16) {
-      return "cmovne " + string("%") + source + ", %" + receiver;
+      return "cmovne " + source + ", " + receiver;
     }
 
     assert(false);
@@ -268,19 +268,19 @@ public:
 
   std::string toString() const {
     if (width == 128) {
-      return string("movdqu ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+      return string("movdqu ") + source + ", " + to_string(offset) + "(%rdi)";
     }
 
     if (width == 32) {
-      return string("movl ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+      return string("movl ") + source + ", " + to_string(offset) + "(%rdi)";
     }
 
     if (width == 16) {
-      return string("mov ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+      return string("mov ") + source + ", " + to_string(offset) + "(%rdi)";
     }
 
     if (width == 8) {
-      return string("movzwl ") + string("%") + source + ", " + to_string(offset) + "(%rdi)";
+      return string("movzwl ") + source + ", " + to_string(offset) + "(%rdi)";
     }
     
     assert(false);
@@ -372,10 +372,10 @@ TEST_CASE("Build tiny program") {
 
 TEST_CASE("Build program from low representation") {
   LowProgram newProgram("simd_add");
-  newProgram.addLoad(0, 1, 128, "xmm0");
-  newProgram.addLoad(128 / 8, 1, 128, "xmm1");
-  newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "xmm0", "xmm1");
-  newProgram.addStore((128 / 8)*2, 1, 128, "xmm1");
+  newProgram.addLoad(0, 1, 128, "%xmm0");
+  newProgram.addLoad(128 / 8, 1, 128, "%xmm1");
+  newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "%xmm0", "%xmm1");
+  newProgram.addStore((128 / 8)*2, 1, 128, "%xmm1");
 
   REQUIRE(newProgram.size() == 4);
 
@@ -470,7 +470,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   }
 
   // Horrible hack
-  vector<string> x86_32Bit{"eax", "ecx", "edx", "esi", "ebx"}; //"esi", "ebx"};
+  vector<string> x86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
 
   map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
@@ -485,7 +485,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "eax"});
+        regAssignment.insert({node, "%eax"});
       }
     } else if (node->getType() == DG_OUTPUT) {
     } else if (node->getType() == DG_BINOP) {
@@ -502,7 +502,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "eax"});
+        regAssignment.insert({node, "%eax"});
       }
     } else if (node->getType() == DG_CONSTANT) {
 
@@ -512,7 +512,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "eax"});
+        regAssignment.insert({node, "%eax"});
       }
 
     } else {
@@ -598,7 +598,7 @@ LowProgram buildLowProgram(const std::string& name,
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
         
     } else if (node->getType() == DG_CONSTANT) {
-      prog.addMov("$1", "eax", 16);
+      prog.addMov("$1", "%eax", 16);
     } else if ((node->getType() == DG_MEM_INPUT) ||
                (node->getType() == DG_MEM_OUTPUT)) {
       
@@ -662,7 +662,7 @@ TEST_CASE("Build program from dataflow graph") {
 
   std::map<DGNode*, std::string> ra =
     regAssign.registerAssignment;
-  REQUIRE(ra[in0] == "ebx");
+  REQUIRE(ra[in0] == "%ebx");
 
   REQUIRE(regOrder.size() == 4);
 
