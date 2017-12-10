@@ -111,6 +111,8 @@ public:
   DGNode* getOp0() const { return op0; }
   DGNode* getOp1() const { return op1; }
 
+  std::string getOpName() const { return op; }
+
   virtual std::string toString() const {
     return "(" + getOp0()->toString() + " " + op + " " + getOp1()->toString() + ")";
   }

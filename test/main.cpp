@@ -94,7 +94,17 @@ public:
         assert(false);
       }
       
+    } else if (tp == ARITH_INT_MUL) {
+      if ((registerWidth == 32) && (opWidth == 32)) {
+        opName = "imul ";
+      } else if ((registerWidth == 16) && (opWidth == 16)) {
+        opName = "imul ";
+      } else {
+        assert(false);
+      }
+
     } else {
+      cout << "Unsupported op type = " << tp << endl;
       assert(false);
     }
     return opName + "%" + source + ", %" + receiver;
@@ -155,12 +165,21 @@ public:
 
   std::string toString() const {
 
-    assert(tp == TEST_NE);
+    if (tp == TEST_NE) {
 
-    if (width == 16) {
-      return "test " + string("%") + source + ", %" + receiver;
+      if ((width == 16) || (width == 32)) {
+        return "test " + string("%") + source + ", %" + receiver;
+      }
+
+      assert(false);
+    } else if (tp == TEST_E) {
+
+      if ((width == 16) || (width == 32)) {
+        return "testne " + string("%") + source + ", %" + receiver;
+      }
+      
+      assert(false);
     }
-
     assert(false);
   }
 
@@ -485,6 +504,20 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       } else {
         regAssignment.insert({node, "eax"});
       }
+    } else if (node->getType() == DG_CONSTANT) {
+
+      if (x86_32Bit.size() > 0) {
+        string nextReg = x86_32Bit.back();
+        x86_32Bit.pop_back();
+
+        regAssignment.insert({node, nextReg});
+      } else {
+        regAssignment.insert({node, "eax"});
+      }
+
+    } else {
+      cout << "No register allocation for " << node->toString() << endl;
+      //assert(false);
     }
   }
 
@@ -517,11 +550,40 @@ LowProgram buildLowProgram(const std::string& name,
       auto bop = toBinop(node);
 
       // TODO: Remove hardcoding
-      prog.addArithmetic(ARITH_INT_ADD,
-                         32,
-                         32,
-                         regAssign.registerAssignment[bop->getOp0()],
-                         regAssign.registerAssignment[bop->getOp1()]);
+
+      string op = bop->getOpName();
+      if ((op == "+") ||
+          (op == " + ")) {
+        prog.addArithmetic(ARITH_INT_ADD,
+                           32,
+                           32,
+                           regAssign.registerAssignment[bop->getOp0()],
+                           regAssign.registerAssignment[bop->getOp1()]);
+      } else if ((op == "==") || (op == " == ")) {
+        prog.addTest(TEST_E,
+                     regAssign.registerAssignment[bop->getOp0()],
+                     regAssign.registerAssignment[bop->getOp1()],
+                     32);
+        
+      } else if ((op == "!=") || (op == " != ")) {
+        prog.addTest(TEST_NE,
+                     regAssign.registerAssignment[bop->getOp0()],
+                     regAssign.registerAssignment[bop->getOp1()],
+                     32);
+        
+      } else if ((op == "*") ||
+          (op == " * ")) {
+        prog.addArithmetic(ARITH_INT_MUL,
+                           32,
+                           32,
+                           regAssign.registerAssignment[bop->getOp0()],
+                           regAssign.registerAssignment[bop->getOp1()]);
+      } else {
+        cout << "No binop for " << bop->toString() << " with op string |" <<
+          bop->getOpName() << "|" << endl;
+
+        assert(false);
+      }
     } else if (node->getType() == DG_TRINOP) {
       auto trop = toTrinop(node);
 
@@ -536,7 +598,7 @@ LowProgram buildLowProgram(const std::string& name,
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
         
     } else if (node->getType() == DG_CONSTANT) {
-      prog.addCMov("$1", "eax", 16);
+      prog.addMov("$1", "eax", 16);
     } else if ((node->getType() == DG_MEM_INPUT) ||
                (node->getType() == DG_MEM_OUTPUT)) {
       
