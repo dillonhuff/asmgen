@@ -165,22 +165,22 @@ public:
 
   std::string toString() const {
 
-    if (tp == TEST_NE) {
+    //if (tp == TEST_NE) {
 
       if ((width == 16) || (width == 32)) {
         return "test " + source + ", " + receiver;
       }
 
       assert(false);
-    } else if (tp == TEST_E) {
+    // } else if (tp == TEST_E) {
 
-      if ((width == 16) || (width == 32)) {
-        return "testne " + source + ", " + receiver;
-      }
+    //   if ((width == 16) || (width == 32)) {
+    //     return "testne " + source + ", " + receiver;
+    //   }
       
-      assert(false);
-    }
-    assert(false);
+    //   assert(false);
+    // }
+    // assert(false);
   }
 
 };
@@ -280,7 +280,7 @@ public:
     }
 
     if (width == 8) {
-      return string("movzwl ") + source + ", " + to_string(offset) + "(%rdi)";
+      return string("mov ") + source + ", " + to_string(offset) + "(%rdi)";
     }
     
     assert(false);
@@ -423,11 +423,16 @@ nowDeadRegisters(DGNode* op,
       freedRegs.push_back(regAssignment[op0]);
     }
 
-    if (dg.getOutEdges(op1).size() == 1) {
-      freedRegs.push_back(regAssignment[op1]);
+    // if (dg.getOutEdges(op1).size() == 1) {
+    //   freedRegs.push_back(regAssignment[op1]);
+    // }
+
+    cout << "Freeing " << freedRegs.size() << " regs:";
+    for (auto& reg : freedRegs) {
+      cout << reg << " ";
     }
-    
-    cout << "Freeing " << freedRegs.size() << " regs" << endl;
+    cout<< endl;
+
     return freedRegs;
   } else if (op->getType() == DG_TRINOP) {
     auto* bp = toTrinop(op);
@@ -449,9 +454,14 @@ nowDeadRegisters(DGNode* op,
       freedRegs.push_back(regAssignment[op2]);
     }
     
-    cout << "Freeing " << freedRegs.size() << " regs" << endl;
-    return freedRegs;
+    cout << "Freeing " << freedRegs.size() << " regs:";
+    for (auto& reg : freedRegs) {
+      cout << reg << " ";
+    }
+    cout<< endl;
 
+    return freedRegs;
+    
   } else if (op->getType() == DG_OUTPUT) {
     auto* bp = toOutput(op);
 
@@ -462,7 +472,12 @@ nowDeadRegisters(DGNode* op,
       freedRegs.push_back(regAssignment[op2]);
     }
     
-    cout << "Freeing " << freedRegs.size() << " regs" << endl;
+    cout << "Freeing " << freedRegs.size() << " regs:";
+    for (auto& reg : freedRegs) {
+      cout << reg << " ";
+    }
+    cout<< endl;
+
     return freedRegs;
   }
 
@@ -541,6 +556,12 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
     // TODO: Reintroduce when I am done with this little experiment
     //assert(x86_32Bit.size() > 0);
+
+    cout << "Registers: ";
+    for (auto& reg : x86_32Bit) {
+      cout << reg << ", ";
+    }
+    cout << endl;
 
     if (node->getType() == DG_INPUT) {
       if (x86_32Bit.size() > 0) {
@@ -932,5 +953,18 @@ TEST_CASE("code from conv_3_1") {
 
   cout << prog << endl;
 
+
+  std::ofstream outf("./test/gencode/" + lowProg.getName() + ".cpp");
+  outf << prog;
+  outf.close();
+
+  std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
+  hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
+  hd.close();
+  
+  int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
+
+  REQUIRE(res == 0);
+  
   deleteContext(c);
 }
