@@ -471,6 +471,8 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
   // Horrible hack
   vector<string> x86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
+  afk::concat(x86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
+        "%r13d", "%r14d", "%r15d"});
 
   map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
@@ -515,7 +517,20 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         regAssignment.insert({node, "%eax"});
       }
 
+    } else if (node->getType() == DG_MEM_INPUT) {
+
+      if (x86_32Bit.size() > 0) {
+        string nextReg = x86_32Bit.back();
+        x86_32Bit.pop_back();
+
+        
+        regAssignment.insert({node, nextReg});
+      } else {
+        regAssignment.insert({node, "%eax"});
+      }
+
     } else {
+      
       cout << "No register allocation for " << node->toString() << endl;
       //assert(false);
     }
@@ -573,6 +588,16 @@ LowProgram buildLowProgram(const std::string& name,
         
       } else if ((op == "*") ||
           (op == " * ")) {
+
+        auto v0 = regAssign.registerAssignment[bop->getOp0()];
+        auto v1 = regAssign.registerAssignment[bop->getOp1()];
+
+        cout << "operand 0 = " << bop->getOp0()->toString() << endl;
+        cout << "operand 1 = " << bop->getOp1()->toString() << endl;
+
+        assert(v0 != "");
+        assert(v1 != "");
+
         prog.addArithmetic(ARITH_INT_MUL,
                            32,
                            32,
@@ -596,9 +621,12 @@ LowProgram buildLowProgram(const std::string& name,
       prog.addTest(TEST_NE, ra[trop->getOp2()], ra[trop->getOp2()], 16);
 
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
-        
+
     } else if (node->getType() == DG_CONSTANT) {
-      prog.addMov("$1", "%eax", 16);
+      auto& ra = regAssign.registerAssignment;
+
+      prog.addMov("$1", ra[node], 16);
+
     } else if ((node->getType() == DG_MEM_INPUT) ||
                (node->getType() == DG_MEM_OUTPUT)) {
       
@@ -662,7 +690,7 @@ TEST_CASE("Build program from dataflow graph") {
 
   std::map<DGNode*, std::string> ra =
     regAssign.registerAssignment;
-  REQUIRE(ra[in0] == "%ebx");
+  REQUIRE(ra[in0] == "%r15d");
 
   REQUIRE(regOrder.size() == 4);
 
