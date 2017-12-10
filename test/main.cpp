@@ -4,8 +4,12 @@
 
 #include "DataGraph.h"
 
+#include "coreir.h"
+#include "coreir/libs/commonlib.h"
+
 using namespace afk;
 using namespace std;
+using namespace CoreIR;
 
 string inlineASMFunction(const std::string& funcName,
                          vector<string> asmOps) {
@@ -37,7 +41,12 @@ enum TestType {
 
 enum ArithType {
   ARITH_INT_ADD,
+  ARITH_INT_SUB,
+  ARITH_INT_MUL,
   ARITH_FLOAT_ADD,
+  ARITH_BIT_OR,
+  ARITH_BIT_AND,
+  ARITH_BIT_XOR
 };
 
 class Instruction {
@@ -76,6 +85,15 @@ public:
       } else {
         assert(false);
       }
+    } else if (tp == ARITH_INT_SUB) {
+      if ((registerWidth == 32) && (opWidth == 32)) {
+        opName = "addl ";
+      } else if ((registerWidth == 16) && (opWidth == 16)) {
+        opName = "sub ";
+      } else {
+        assert(false);
+      }
+      
     } else {
       assert(false);
     }
@@ -363,14 +381,14 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   vector<DGNode*> ins = allInputs(dg);
 
   set<DGNode*> alreadyAdded;
-  concat(nodeOrder, ins);
+  afk::concat(nodeOrder, ins);
   for (auto& node : nodeOrder) {
     alreadyAdded.insert(node);
   }
 
   vector<DGNode*> nodesLeft;
   for (auto& node : dg.getNodes()) {
-    if (!elem(node, alreadyAdded)) {
+    if (!afk::elem(node, alreadyAdded)) {
       nodesLeft.push_back(node);
     }
   }
@@ -383,7 +401,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
     for (auto& node : nodesLeft) {
       bool allInputsAdded = true;
       for (auto& input : dg.getInputs(node)) {
-        if (!elem(input, alreadyAdded)) {
+        if (!afk::elem(input, alreadyAdded)) {
           allInputsAdded = false;
           break;
         }
@@ -392,7 +410,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       if (allInputsAdded) {
         alreadyAdded.insert(node);
         nodeOrder.push_back(node);
-        remove(node, nodesLeft);
+        afk::remove(node, nodesLeft);
         break;
       }
     }
@@ -555,4 +573,136 @@ TEST_CASE("Build program from dataflow graph") {
 
   cout << prog << endl;
 
+}
+
+TEST_CASE("code from conv_3_1") {
+  Context* c = newContext();
+  CoreIRLoadLibrary_commonlib(c);
+
+  if (!loadFromFile(c,"./test/conv_3_1.json")) {
+    cout << "Could not Load from json!!" << endl;
+    c->die();
+  }
+
+  c->runPasses({"rungenerators","flattentypes","flatten", "wireclocks-coreir"});
+
+  Module* m = c->getGlobal()->getModule("DesignTop");
+
+  NGraph g;
+  buildOrderedGraph(m, g);
+  deque<vdisc> topoOrder = topologicalSort(g);
+
+  map<Wireable*, DGNode*> dgVerts;
+
+  DataGraph dg;
+  for (auto& vd : topoOrder) {
+    WireNode wd = g.getNode(vd);
+
+    cout << "Converting " << nodeString(wd) << endl;
+
+    if (isGraphInput(wd) && !isClkIn(*(wd.getWire()->getType()))) {
+      auto in = dg.addInput(nodeString(wd), containerTypeWidth(*(wd.getWire()->getType())));
+
+      dgVerts[wd.getWire()] = in;
+    } else if (isGraphInput(wd) && isClkIn(*wd.getWire()->getType())) {
+      continue;
+    } else if (isGraphOutput(wd)) {
+
+      auto inSels = getInputs(vd, g);
+      cout << "Input selects size = " << inSels.size() << endl;
+      
+      assert(inSels.size() == 1);
+
+      auto outp = dg.addOutput(wd.getWire()->toString(),
+                               containerTypeWidth(*(wd.getWire()->getType())),
+                               dgVerts[inSels[0]]);
+      
+    } else if (isConstant(wd)) {
+      Instance* inst = toInstance(wd.getWire());
+
+      // TODO: Add constant value computation
+      auto dc = dg.addConstant(1, 16);
+
+      dgVerts[inst] = dc;
+    } else if (isInstance(wd.getWire())) {
+
+      Instance* inst = toInstance(wd.getWire());
+
+      if (isRegisterInstance(inst) && !wd.isReceiver) {
+        auto in = dg.addInput(inst->toString(),
+                              containerTypeWidth(*(inst->sel("out")->getType())));
+
+        dgVerts[inst] = in;
+      } else if (isRegisterInstance(inst) && wd.isReceiver) {
+
+        auto inConns = getInputConnections(vd, g);
+
+        InstanceValue in = findArg("in", inConns);
+
+        auto outp = dg.addOutput(inst->toString(),
+                                 containerTypeWidth(*(inst->sel("out")->getType())),
+                                 dgVerts[in.getWire()]);
+
+        dgVerts[in.getWire()] = outp;
+      } else if (isBitwiseOp(*inst) ||
+                 isSignInvariantOp(*inst) ||
+                 isUnsignedCmp(*inst) ||
+                 isShiftOp(*inst) ||
+                 isUDivOrRem(*inst)) {
+
+        auto inConns = getInputConnections(vd, g);
+
+        auto in0 = findArg("in0", inConns);
+        auto in1 = findArg("in1", inConns);
+
+        auto op = dg.addBinop(getOpString(*inst),
+                              dgVerts[in0.getWire()],
+                              dgVerts[in1.getWire()]);
+
+        dgVerts[inst] = op;
+      } else if (getQualifiedOpName(*inst) == "coreir.mux") {
+        auto inConns = getInputConnections(vd, g);
+
+        auto in0 = findArg("in0", inConns);
+        auto in1 = findArg("in1", inConns);
+        auto in2 = findArg("sel", inConns);
+
+        auto op = dg.addTrinop("mux",
+                               dgVerts[in0.getWire()],
+                               dgVerts[in1.getWire()],
+                               dgVerts[in2.getWire()]);
+
+        
+        dgVerts[inst] = op;
+        
+      } else if (getQualifiedOpName(*inst) == "corebit.term") {
+
+        auto inConns = getInputConnections(vd, g);
+
+        auto in = findArg("in", inConns);
+
+        auto outp = dg.addOutput(inst->toString(),
+                                 8,
+                                 dgVerts[in.getWire()]);
+        dgVerts[inst] = outp;
+
+      } else if (isMemoryInstance(inst)) {
+        if (wd.isReceiver) {
+          //assert(false);
+          continue;
+        } else {
+          //assert(false);
+          continue;
+        }
+      } else {
+        cout << "Unsupported instance = " << nodeString(wd) << endl;
+        assert(false);
+      }
+    } else {
+      cout << "Unsupported node = " << nodeString(wd) << endl;
+      assert(false);
+    }
+  }
+
+  deleteContext(c);
 }
