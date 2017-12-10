@@ -36,3 +36,13 @@ std::vector<DGNode*> allInputs(const DataGraph& dg) {
 
   return nds;
 }
+
+DGNode* maskOp(DGNode* const width, DGNode* const expr, DataGraph& dg) {
+  auto cs1 = dg.addConstant(1, 64);
+  auto shr = dg.addBinop("<<", cs1, width);
+  auto cs2 = dg.addConstant(1, 64);
+  auto diff = dg.addBinop("-", shr, cs2);
+  auto maskExpr = dg.addBinop("&", diff, expr);
+
+  return maskExpr;
+}

@@ -8,7 +8,8 @@ enum DGType {
   DG_INPUT,
   DG_OUTPUT,
   DG_BINOP,
-  DG_TRINOP
+  DG_TRINOP,
+  DG_CONSTANT
 };
 
 class DGNode {
@@ -34,6 +35,19 @@ public:
   virtual DGType getType() const { return DG_INPUT; }
 
   int getLength() const { return length; }
+};
+
+class DGConst : public DGNode {
+  int value;
+  int length;
+
+public:
+  DGConst(const int value_, const int length_) : value(value_), length(length_) {}
+
+  int getValue() const { return value; }
+  int getLength() const { return length; }
+
+  virtual DGType getType() const { return DG_CONSTANT; }
 };
 
 class DGOut : public DGNode {
@@ -145,6 +159,14 @@ public:
     map_insert(outEdges, static_cast<DGNode*>(input), static_cast<DGNode*>(dgOut));
 
     return dgOut;
+  }
+
+  DGConst* addConstant(int value, int length) {
+    auto dgC = new DGConst(value, length);
+
+    insertNode(dgC);
+
+    return dgC;
   }
 
   DGTrinop* addTrinop(const std::string& op,
