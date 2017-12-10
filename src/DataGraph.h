@@ -163,6 +163,10 @@ public:
 
   std::vector<DGNode*> getNodes() const { return nodes; }
 
+  std::vector<DGNode*> getOutEdges(DGNode* const n) const {
+    return (outEdges.find(n))->second;
+  }
+
   std::vector<DGNode*> getInputs(DGNode* const nd) const {
     auto it = inEdges.find(nd);
 

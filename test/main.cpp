@@ -408,6 +408,68 @@ struct RegisterAssignment {
   std::map<DGNode*, int> offsets;
 };
 
+std::vector<std::string>
+nowDeadRegisters(DGNode* op,
+                 DataGraph& dg,
+                 map<DGNode*, std::string>& regAssignment) {
+  if (op->getType() == DG_BINOP) {
+    auto* bp = toBinop(op);
+
+    vector<string> freedRegs;
+    auto op0 = bp->getOp0();
+    auto op1 = bp->getOp1();
+
+    if (dg.getOutEdges(op0).size() == 1) {
+      freedRegs.push_back(regAssignment[op0]);
+    }
+
+    if (dg.getOutEdges(op1).size() == 1) {
+      freedRegs.push_back(regAssignment[op1]);
+    }
+    
+    cout << "Freeing " << freedRegs.size() << " regs" << endl;
+    return freedRegs;
+  } else if (op->getType() == DG_TRINOP) {
+    auto* bp = toTrinop(op);
+
+    vector<string> freedRegs;
+    auto op0 = bp->getOp0();
+    auto op1 = bp->getOp1();
+    auto op2 = bp->getOp2();
+
+    if (dg.getOutEdges(op0).size() == 1) {
+      freedRegs.push_back(regAssignment[op0]);
+    }
+
+    if (dg.getOutEdges(op1).size() == 1) {
+      freedRegs.push_back(regAssignment[op1]);
+    }
+
+    if (dg.getOutEdges(op2).size() == 1) {
+      freedRegs.push_back(regAssignment[op2]);
+    }
+    
+    cout << "Freeing " << freedRegs.size() << " regs" << endl;
+    return freedRegs;
+
+  } else if (op->getType() == DG_OUTPUT) {
+    auto* bp = toOutput(op);
+
+    auto op2 = bp->getInput();
+
+    vector<string> freedRegs;
+    if (dg.getOutEdges(op2).size() == 1) {
+      freedRegs.push_back(regAssignment[op2]);
+    }
+    
+    cout << "Freeing " << freedRegs.size() << " regs" << endl;
+    return freedRegs;
+  }
+
+  cout << "None freed" << endl;
+  return {};
+}
+
 RegisterAssignment assignRegisters(DataGraph& dg) {
   vector<DGNode*> nodeOrder;
   vector<DGNode*> ins = allInputs(dg);
@@ -487,8 +549,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%eax"});
+        regAssignment.insert({node, "%NONE"});
       }
+
     } else if (node->getType() == DG_OUTPUT) {
     } else if (node->getType() == DG_BINOP) {
 
@@ -504,8 +567,10 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%eax"});
+        regAssignment.insert({node, "%NONE"});
       }
+
+
     } else if (node->getType() == DG_CONSTANT) {
 
       if (x86_32Bit.size() > 0) {
@@ -514,7 +579,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%eax"});
+        regAssignment.insert({node, "%NONE"});
       }
 
     } else if (node->getType() == DG_MEM_INPUT) {
@@ -526,7 +591,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         
         regAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%eax"});
+        regAssignment.insert({node, "%NONE"});
       }
 
     } else {
@@ -534,6 +599,8 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       cout << "No register allocation for " << node->toString() << endl;
       //assert(false);
     }
+
+    afk::concat(x86_32Bit, nowDeadRegisters(node, dg, regAssignment));
   }
 
   return {nodeOrder, regAssignment, layout};
