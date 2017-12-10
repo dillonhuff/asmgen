@@ -715,9 +715,11 @@ LowProgram buildLowProgram(const std::string& name,
 
       prog.addMov("$1", ra[node], 16);
 
-    } else if ((node->getType() == DG_MEM_INPUT) ||
-               (node->getType() == DG_MEM_OUTPUT)) {
-      
+    } else if (node->getType() == DG_MEM_INPUT) {
+      auto& ra = regAssign.registerAssignment;
+      prog.addMov("MEM_OFF(%rdi, IN_NODE, 2)", ra[node], 16);
+    } else if (node->getType() == DG_MEM_OUTPUT) {
+      prog.addMov("NO_REG", "MEM_OFF(%rdi, IN_NODE, 2)", 16);
     } else {
       cout << "Unsupported node " << node->toString() << endl;
       assert(false);
