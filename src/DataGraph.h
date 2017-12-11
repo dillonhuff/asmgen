@@ -123,7 +123,7 @@ public:
 
   virtual DGType getType() const { return DG_MEM_INPUT; }
 
-  virtual std::string toString() const { return "memin"; }
+  virtual std::string toString() const { return name; }
 };
 
 class DGOut : public DGNode {

@@ -86,17 +86,33 @@ static inline std::string layoutStructString(std::map<MemChunk*, int>& offsets) 
     if (nd->getType() == DG_INPUT) {
       auto inNode = toInput(nd);
       typeStr = "uint" + std::to_string(inNode->getLength()) + "_t";
+
+      decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
     } else if (nd->getType() == DG_OUTPUT) {
       auto inNode = toOutput(nd);
       typeStr = "uint" + std::to_string(inNode->getLength()) + "_t";
+
+      decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
     } else if (nd->getType() == DG_MEM_INPUT) {
       auto inNode = toMemInput(nd);
       int readSize = inNode->getReadSize();
 
-      typeStr = "uint" + std::to_string(readSize*8) + "_t [ " +
-        std::to_string(inNode->getMemSize() / readSize) + " ] ";
+      decls += "\tuint" + std::to_string(readSize*8) + "_t " + name + " [ " +
+        std::to_string(inNode->getMemSize() / readSize) + " ]; " + " // Offset = " + std::to_string(ofp.second) + "\n";
+
+      //decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
+    } else if (nd->getType() == DG_MEM_OUTPUT) {
+
+      auto inNode = toMemOutput(nd);
+      int readSize = inNode->getReadSize();
+
+      decls += "\tuint" + std::to_string(readSize*8) + "_t " + name + " [ " +
+        std::to_string(inNode->getMemSize() / readSize) + " ]; " + " // Offset = " + std::to_string(ofp.second) + "\n";
+      
+    } else {
+      decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
     }
-    decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
+    
   }
 
   return "struct __attribute__((packed)) layout {\n" + decls + "\n};\n";
