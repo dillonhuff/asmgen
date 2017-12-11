@@ -105,7 +105,12 @@ std::string layoutStructString(std::map<DGNode*, int>& offsets) {
 
   string decls = "";
   for (auto& ofp : offsets) {
-    decls += "\t <TYPE>" + ofp.first->toString() + ";\n";
+    string name = ofp.first->toString();
+    std::replace(name.begin(), name.end(), '.', '_');
+    std::replace(name.begin(), name.end(), ':', '_');
+    std::replace(name.begin(), name.end(), ' ', '_');
+    std::replace(name.begin(), name.end(), '=', '_');
+    decls += "\t <TYPE> " + name + ";\n";
   }
 
   return "struct __attribute__((packed)) layout {\n" + decls + "\n}\n";
