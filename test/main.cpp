@@ -950,8 +950,8 @@ TEST_CASE("Single register printout") {
   LowProgram lowProg = buildLowProgram("reg_path", dgs[0], regAssign);
 
   for (uint i = 1; i < dgs.size(); i++) {
-    auto asgR = assignRegisters(dgs[i]);
-    appendLowProgram(dgs[i], asgR, lowProg);
+    appendAssignRegisters(dgs[i], regAssign);
+    appendLowProgram(dgs[i], regAssign, lowProg);
   }
 
   compileCode(regAssign, lowProg);
