@@ -16,5 +16,14 @@ int main() {
 
   cout << "output = " << lt.self_out_0 << endl;
 
+  lt.self_in_0 = 5;
+  lt.self_in_1 = 9;
+  lt.self_clk = 0;
+  lt.self_clk_last = 1;
+
+  reg_path(&lt);
+
+  assert(lt.self_out_0 == 4);
+
   return 0;
 }

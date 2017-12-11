@@ -378,6 +378,9 @@ TEST_CASE("Single register printout") {
 
   assert(dgs.size() > 0);
 
+  dgs[0].addInput("self_clk", 8);
+  dgs[0].addInput("self_clk_last", 8);
+
   auto regAssign = assignRegisters(dgs[0]);
   LowProgram lowProg = buildLowProgram("reg_path", dgs[0], regAssign);
 
