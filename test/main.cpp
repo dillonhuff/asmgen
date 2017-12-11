@@ -291,7 +291,7 @@ std::vector<DataGraph> coreModuleToDG(Module* m) {
     assert(dag.nodes.size() == 1);
 
     DataGraph dg;
-    addDAGNodes(addInputs(dag.nodes[0], g), g, dgVerts, dg);
+    addDAGNodes(addConstants(addInputs(dag.nodes[0], g), g), g, dgVerts, dg);
 
     dgs.push_back(dg);
   }
@@ -300,7 +300,7 @@ std::vector<DataGraph> coreModuleToDG(Module* m) {
     assert(dag.nodes.size() == 1);
 
     DataGraph dg;
-    addDAGNodes(addInputs(dag.nodes[0], g), g, dgVerts, dg);
+    addDAGNodes(addConstants(addInputs(dag.nodes[0], g), g), g, dgVerts, dg);
     dgs.push_back(dg);
   }
 
