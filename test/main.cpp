@@ -125,6 +125,11 @@ std::string layoutStructString(std::map<DGNode*, int>& offsets) {
     } else if (nd->getType() == DG_OUTPUT) {
       auto inNode = toOutput(nd);
       typeStr = "uint" + to_string(inNode->getLength()) + "_t";
+    } else if (nd->getType() == DG_MEM_INPUT) {
+      auto inNode = toMemInput(nd);
+      int readSize = inNode->getReadSize();
+
+      typeStr = "uint" + to_string(readSize*8) + "_t [ " + to_string(inNode->getMemSize() / readSize) + " ] ";
     }
     decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + to_string(ofp.second) + "\n";
   }
@@ -265,6 +270,12 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
     } else if (node->getType() == DG_OUTPUT) {
       layout[node] = offset;
       offset += toOutput(node)->getLength() / 8;
+    } else if (node->getType() == DG_MEM_INPUT) {
+      layout[node] = offset;
+      offset += toMemInput(node)->getMemSize();
+    } else if (node->getType() == DG_MEM_OUTPUT) {
+      layout[node] = offset;
+      offset += toMemOutput(node)->getMemSize();
     }
 
   }
