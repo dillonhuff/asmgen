@@ -206,6 +206,7 @@ public:
 };
 
 DGIn* toInput(DGNode* const node);
+DGConst* toConstant(DGNode* const node);
 DGBinop* toBinop(DGNode* const node);
 DGTrinop* toTrinop(DGNode* const node);
 DGOut* toOutput(DGNode* const node);

@@ -26,7 +26,6 @@ struct RegisterAssignment {
 
   int getMaxOffset() const { return maxOffset; }
 
-  //void addOffset(DGNode* const origin, const int offset) {
   void addOffset(DGNode* const origin, const int length) {
     auto chk = new MemChunk(origin->toString(), origin);
     offsets.insert({chk, maxOffset});

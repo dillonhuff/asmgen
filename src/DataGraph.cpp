@@ -8,6 +8,12 @@ DGIn* toInput(DGNode* const node) {
   return static_cast<DGIn*>(node);
 }
 
+DGConst* toConstant(DGNode* const node) {
+  assert(node->getType() == DG_CONSTANT);
+
+  return static_cast<DGConst*>(node);
+}
+
 DGMemOut* toMemOutput(DGNode* const node) {
   assert(node->getType() == DG_MEM_OUTPUT);
 

@@ -80,7 +80,6 @@ void appendAssignRegisters(DataGraph& dg,
   auto nodeOrder = topologicalSort(dg);
   afk::concat(asg.topoOrder, nodeOrder);
 
-  //int offset = asg.getMaxOffset();
   for (auto& node : nodeOrder) {
 
     bool notAdded = true;
@@ -115,16 +114,16 @@ void appendAssignRegisters(DataGraph& dg,
 
   }
 
+  vector<string> allx86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
+  afk::concat(allx86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
+        "%r13d", "%r14d", "%r15d"});
+  
   // Horrible hack
   vector<string> x86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
   afk::concat(x86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
         "%r13d", "%r14d", "%r15d"});
 
-  //map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
-
-    // TODO: Reintroduce when I am done with this little experiment
-    //assert(x86_32Bit.size() > 0);
 
     cout << "Registers: ";
     for (auto& reg : x86_32Bit) {
@@ -162,10 +161,31 @@ void appendAssignRegisters(DataGraph& dg,
     } else if (node->getType() == DG_CONSTANT) {
 
       if (x86_32Bit.size() > 0) {
-        string nextReg = x86_32Bit.back();
-        x86_32Bit.pop_back();
 
-        asg.registerAssignment.insert({node, nextReg});
+        if (dg.getOutEdges(node).size() == 1) {
+          // DGConst* dc = toConstant(node);
+
+          // DGNode* receiver = dg.getOutEdges(node)[0];
+
+          // if (receiver->getType() == DG_BINOP) {
+
+          //   if ((toBinop(receiver)->getOp0() == dc) &&
+          //       (toBinop(receiver)->getOp1() != dc)) {
+          //     asg.registerAssignment.insert({node, "$" + dc->toString()});
+          //   }
+          // }
+
+          string nextReg = x86_32Bit.back();
+          x86_32Bit.pop_back();
+
+          asg.registerAssignment.insert({node, nextReg});
+
+        } else {
+          string nextReg = x86_32Bit.back();
+          x86_32Bit.pop_back();
+
+          asg.registerAssignment.insert({node, nextReg});
+        }
       } else {
         asg.registerAssignment.insert({node, "%NONE"});
       }
@@ -185,13 +205,11 @@ void appendAssignRegisters(DataGraph& dg,
     } else {
       
       cout << "No register allocation for " << node->toString() << endl;
-      //assert(false);
     }
 
     afk::concat(x86_32Bit, nowDeadRegisters(node, dg, asg.registerAssignment));
+    x86_32Bit = afk::intersection(x86_32Bit, allx86_32Bit);
   }
-
-  //asg.registerAssignment = asg.regAssignment;
 
 }
 
