@@ -221,55 +221,55 @@ protected:
 
 public:
 
-  DataGraph() {}
+  // DataGraph() {}
 
-  DataGraph& operator=(const DataGraph& other) {
-    if (&other == this) {
-      return *this;
-    }
+  // DataGraph& operator=(const DataGraph& other) {
+  //   if (&other == this) {
+  //     return *this;
+  //   }
 
-    DataGraph tmp(other);
-    nodes = std::move(tmp.nodes);
-    inEdges = std::move(tmp.inEdges);
-    outEdges = std::move(tmp.outEdges);
+  //   DataGraph tmp(other);
+  //   nodes = std::move(tmp.nodes);
+  //   inEdges = std::move(tmp.inEdges);
+  //   outEdges = std::move(tmp.outEdges);
 
-    return *this;
-  }
+  //   return *this;
+  // }
 
-  DataGraph(const DataGraph& other) {
-    std::map<DGNode*, DGNode*> tmpNodeMap;
+  // DataGraph(const DataGraph& other) {
+  //   std::map<DGNode*, DGNode*> tmpNodeMap;
 
-    for (auto& node : other.nodes) {
-      auto nodeCpy = node->copy();
-      this->nodes.push_back(nodeCpy);
-      tmpNodeMap.insert({node, nodeCpy});
-    }
+  //   for (auto& node : other.nodes) {
+  //     auto nodeCpy = node->copy();
+  //     this->nodes.push_back(nodeCpy);
+  //     tmpNodeMap.insert({node, nodeCpy});
+  //   }
 
-    for (auto& entry : other.inEdges) {
-      std::vector<DGNode*> thisNodes;
+  //   for (auto& entry : other.inEdges) {
+  //     std::vector<DGNode*> thisNodes;
 
-      for (auto& otherNode : entry.second) {
-        assert(afk::contains_key(otherNode, tmpNodeMap));
-        thisNodes.push_back(tmpNodeMap[otherNode]);
-      }
+  //     for (auto& otherNode : entry.second) {
+  //       assert(afk::contains_key(otherNode, tmpNodeMap));
+  //       thisNodes.push_back(tmpNodeMap[otherNode]);
+  //     }
 
-      assert(afk::contains_key(entry.first, tmpNodeMap));
-      inEdges.insert({tmpNodeMap[entry.first], thisNodes});
-    }
+  //     assert(afk::contains_key(entry.first, tmpNodeMap));
+  //     inEdges.insert({tmpNodeMap[entry.first], thisNodes});
+  //   }
 
-    for (auto& entry : other.outEdges) {
-      std::vector<DGNode*> thisNodes;
+  //   for (auto& entry : other.outEdges) {
+  //     std::vector<DGNode*> thisNodes;
 
-      for (auto& otherNode : entry.second) {
-        assert(afk::contains_key(otherNode, tmpNodeMap));
-        thisNodes.push_back(tmpNodeMap[otherNode]);
-      }
+  //     for (auto& otherNode : entry.second) {
+  //       assert(afk::contains_key(otherNode, tmpNodeMap));
+  //       thisNodes.push_back(tmpNodeMap[otherNode]);
+  //     }
 
-      assert(afk::contains_key(entry.first, tmpNodeMap));
-      outEdges.insert({tmpNodeMap[entry.first], thisNodes});
-    }
+  //     assert(afk::contains_key(entry.first, tmpNodeMap));
+  //     outEdges.insert({tmpNodeMap[entry.first], thisNodes});
+  //   }
 
-  }
+  // }
                 
 
   std::vector<DGNode*> getNodes() const { return nodes; }
@@ -380,12 +380,13 @@ public:
     
     return dgOut;
   }
-  
-  ~DataGraph() {
-    for (auto& nd : nodes) {
-      delete nd;
-    }
-  }
+
+  // TODO: Reintroduce when register experiment is over
+  // ~DataGraph() {
+  //   for (auto& nd : nodes) {
+  //     delete nd;
+  //   }
+  // }
 };
 
 std::vector<DGNode*> allInputs(const DataGraph& dg);

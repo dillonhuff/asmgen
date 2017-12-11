@@ -100,6 +100,7 @@ public:
 };
 
 struct RegisterAssignment {
+  int maxOffset;
   std::vector<DGNode*> topoOrder;
   std::map<DGNode*, std::string> registerAssignment;
 
@@ -108,10 +109,15 @@ struct RegisterAssignment {
   std::map<MemChunk*, int> offsets;
   std::map<DGNode*, MemChunk*> memLocs;
 
+  RegisterAssignment() : maxOffset(0) {}
+
+  int getMaxOffset() const { return maxOffset; }
+
   void addOffset(DGNode* const origin, const int offset) {
     auto chk = new MemChunk(origin->toString(), origin);
     offsets.insert({chk, offset});
     memLocs.insert({origin, chk});
+    maxOffset += offset;
   }
 
   void accessChunk(DGNode* const origin, MemChunk* chk) {
@@ -257,7 +263,8 @@ nowDeadRegisters(DGNode* op,
   return {};
 }
 
-RegisterAssignment assignRegisters(DataGraph& dg) {
+void appendAssignRegisters(DataGraph& dg,
+                           RegisterAssignment& asg) {
   vector<DGNode*> nodeOrder;
   vector<DGNode*> ins = allInputs(dg);
 
@@ -305,11 +312,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
   }
 
-  RegisterAssignment asg;
-  asg.topoOrder = nodeOrder;
+  afk::concat(asg.topoOrder, nodeOrder);
 
-  //map<MemChunk*, int> layout;
-  int offset = 0;
+  int offset = asg.getMaxOffset();
   for (auto& node : nodeOrder) {
 
     bool notAdded = true;
@@ -349,7 +354,7 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
   afk::concat(x86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
         "%r13d", "%r14d", "%r15d"});
 
-  map<DGNode*, string> regAssignment;
+  //map<DGNode*, string> regAssignment;
   for (auto& node : nodeOrder) {
 
     // TODO: Reintroduce when I am done with this little experiment
@@ -366,16 +371,16 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         string nextReg = x86_32Bit.back();
         x86_32Bit.pop_back();
 
-        regAssignment.insert({node, nextReg});
+        asg.registerAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%NONE"});
+        asg.registerAssignment.insert({node, "%NONE"});
       }
 
     } else if (node->getType() == DG_OUTPUT) {
     } else if (node->getType() == DG_BINOP) {
 
       DGBinop* bp = static_cast<DGBinop*>(node);
-      regAssignment.insert({node, regAssignment[bp->getOp1()]});
+      asg.registerAssignment.insert({node, asg.registerAssignment[bp->getOp1()]});
 
     } else if (node->getType() == DG_TRINOP) {
       DGTrinop* bp = toTrinop(node);
@@ -384,9 +389,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         string nextReg = x86_32Bit.back();
         x86_32Bit.pop_back();
 
-        regAssignment.insert({node, nextReg});
+        asg.registerAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%NONE"});
+        asg.registerAssignment.insert({node, "%NONE"});
       }
 
 
@@ -396,9 +401,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         string nextReg = x86_32Bit.back();
         x86_32Bit.pop_back();
 
-        regAssignment.insert({node, nextReg});
+        asg.registerAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%NONE"});
+        asg.registerAssignment.insert({node, "%NONE"});
       }
 
     } else if (node->getType() == DG_MEM_INPUT) {
@@ -408,9 +413,9 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
         x86_32Bit.pop_back();
 
         
-        regAssignment.insert({node, nextReg});
+        asg.registerAssignment.insert({node, nextReg});
       } else {
-        regAssignment.insert({node, "%NONE"});
+        asg.registerAssignment.insert({node, "%NONE"});
       }
 
     } else {
@@ -419,12 +424,21 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
       //assert(false);
     }
 
-    afk::concat(x86_32Bit, nowDeadRegisters(node, dg, regAssignment));
+    afk::concat(x86_32Bit, nowDeadRegisters(node, dg, asg.registerAssignment));
   }
 
-  asg.registerAssignment = regAssignment;
+  //asg.registerAssignment = asg.regAssignment;
+
+}
+
+RegisterAssignment assignRegisters(DataGraph& dg) {
+
+  RegisterAssignment asg;
+
+  appendAssignRegisters(dg, asg);
+
   return asg;
-  //return {nodeOrder, regAssignment, layout};
+
 }
 
 string to64Bit(const std::string& str) {
