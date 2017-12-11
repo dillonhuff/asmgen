@@ -204,6 +204,33 @@ src/Output.cpp.s:
 	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/Output.cpp.s
 .PHONY : src/Output.cpp.s
 
+src/RegisterAssignment.o: src/RegisterAssignment.cpp.o
+
+.PHONY : src/RegisterAssignment.o
+
+# target to build an object file
+src/RegisterAssignment.cpp.o:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/RegisterAssignment.cpp.o
+.PHONY : src/RegisterAssignment.cpp.o
+
+src/RegisterAssignment.i: src/RegisterAssignment.cpp.i
+
+.PHONY : src/RegisterAssignment.i
+
+# target to preprocess a source file
+src/RegisterAssignment.cpp.i:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/RegisterAssignment.cpp.i
+.PHONY : src/RegisterAssignment.cpp.i
+
+src/RegisterAssignment.s: src/RegisterAssignment.cpp.s
+
+.PHONY : src/RegisterAssignment.s
+
+# target to generate assembly for a file
+src/RegisterAssignment.cpp.s:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/RegisterAssignment.cpp.s
+.PHONY : src/RegisterAssignment.cpp.s
+
 test/main.o: test/main.cpp.o
 
 .PHONY : test/main.o
@@ -249,6 +276,9 @@ help:
 	@echo "... src/Output.o"
 	@echo "... src/Output.i"
 	@echo "... src/Output.s"
+	@echo "... src/RegisterAssignment.o"
+	@echo "... src/RegisterAssignment.i"
+	@echo "... src/RegisterAssignment.s"
 	@echo "... test/main.o"
 	@echo "... test/main.i"
 	@echo "... test/main.s"

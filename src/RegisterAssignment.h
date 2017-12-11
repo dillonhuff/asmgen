@@ -40,7 +40,7 @@ struct RegisterAssignment {
   int getOffset(DGNode* const node) const {
     auto memChunk = memLocs.find(node);
 
-    cout << "Searching for " << node->toString() << endl;
+    std::cout << "Searching for " << node->toString() << std::endl;
 
     assert(memChunk != std::end(memLocs));
 
@@ -63,39 +63,39 @@ struct RegisterAssignment {
 
 static inline std::string layoutStructString(std::map<MemChunk*, int>& offsets) {
 
-  vector<pair<MemChunk*, int> > sortedOffs;
+  std::vector<std::pair<MemChunk*, int> > sortedOffs;
   for (auto& ofp : offsets) {
     sortedOffs.push_back({ofp.first, ofp.second});
   }
 
-  afk::sort_lt(sortedOffs, [](const pair<MemChunk*, int>& l) {
+  afk::sort_lt(sortedOffs, [](const std::pair<MemChunk*, int>& l) {
       return l.second;
     });
 
-  string decls = "";
+  std::string decls = "";
   for (auto& ofp : sortedOffs) {
-    string name = ofp.first->name;
+    std::string name = ofp.first->name;
     std::replace(name.begin(), name.end(), '.', '_');
     std::replace(name.begin(), name.end(), ':', '_');
     std::replace(name.begin(), name.end(), ' ', '_');
     std::replace(name.begin(), name.end(), '=', '_');
 
-    string typeStr = "<TYPE>";
+    std::string typeStr = "<TYPE>";
 
     auto nd = ofp.first->origin;
     if (nd->getType() == DG_INPUT) {
       auto inNode = toInput(nd);
-      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
+      typeStr = "uint" + std::to_string(inNode->getLength()) + "_t";
     } else if (nd->getType() == DG_OUTPUT) {
       auto inNode = toOutput(nd);
-      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
+      typeStr = "uint" + std::to_string(inNode->getLength()) + "_t";
     } else if (nd->getType() == DG_MEM_INPUT) {
       auto inNode = toMemInput(nd);
       int readSize = inNode->getReadSize();
 
-      typeStr = "uint" + to_string(readSize*8) + "_t [ " + to_string(inNode->getMemSize() / readSize) + " ] ";
+      typeStr = "uint" + std::to_string(readSize*8) + "_t [ " + std::to_string(inNode->getMemSize() / readSize) + " ] ";
     }
-    decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + to_string(ofp.second) + "\n";
+    decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
   }
 
   return "struct __attribute__((packed)) layout {\n" + decls + "\n};\n";

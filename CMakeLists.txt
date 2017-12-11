@@ -13,7 +13,8 @@ INCLUDE_DIRECTORIES(./src/)
 
 SET(SRC_FILES ./src/DataGraph.cpp
               ./src/LowProgram.cpp
-              ./src/Output.cpp)
+              ./src/Output.cpp
+              ./src/RegisterAssignment.cpp)
 
 SET(TEST_FILES test/main.cpp)
 
