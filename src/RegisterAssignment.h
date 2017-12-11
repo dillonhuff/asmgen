@@ -30,7 +30,10 @@ struct RegisterAssignment {
     auto chk = new MemChunk(origin->toString(), origin);
     offsets.insert({chk, offset});
     memLocs.insert({origin, chk});
-    maxOffset += offset;
+
+    std::cout << "MaxOffset = " << maxOffset << std::endl;
+    maxOffset = offset;
+    std::cout << "MaxOffset after " << origin->toString() << " = " << maxOffset << std::endl;
   }
 
   void accessChunk(DGNode* const origin, MemChunk* chk) {
