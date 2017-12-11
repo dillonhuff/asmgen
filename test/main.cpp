@@ -386,7 +386,7 @@ TEST_CASE("Single register printout") {
 
   cout << "Dag 0 program" << endl;
   cout << prog << endl;
-  
+
   for (uint i = 1; i < dgs.size(); i++) {
     appendAssignRegisters(dgs[i], regAssign);
     auto tpSort = topologicalSort(dgs[i]);
@@ -399,7 +399,9 @@ TEST_CASE("Single register printout") {
     cout << prog << endl;
   }
 
-  compileCode(regAssign, lowProg);
+  int r = compileCodeAndRun(regAssign, lowProg);
+
+  REQUIRE(r == 0);
 
   deleteContext(c);
 }
