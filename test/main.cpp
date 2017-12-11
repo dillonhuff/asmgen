@@ -92,9 +92,24 @@ TEST_CASE("Build program from low representation") {
 struct RegisterAssignment {
   std::vector<DGNode*> topoOrder;
   std::map<DGNode*, std::string> registerAssignment;
+  // Should move to using stack vs. heap offsets, or maybe a unified location
+  // type encompassing registers, stack, and heap?
   std::map<DGNode*, int> offsets;
 };
 
+std::string layoutStructString(std::map<DGNode*, int>& offsets) {
+  vector<pair<DGNode*, int> > sortedOffs;
+  afk::sort_lt(sortedOffs, [](const pair<DGNode*, int>& l) {
+      return l.second;
+    });
+
+  string decls = "";
+  for (auto& ofp : offsets) {
+    decls += "\t <TYPE>" + ofp.first->toString() + ";\n";
+  }
+
+  return "struct __attribute__((packed)) layout {\n" + decls + "\n}\n";
+}
 std::vector<std::string>
 nowDeadRegisters(DGNode* op,
                  DataGraph& dg,
@@ -699,7 +714,7 @@ TEST_CASE("code from conv_3_1") {
 
   std::map<DGNode*, std::string> ra =
     regAssign.registerAssignment;
-  
+
   LowProgram lowProg = buildLowProgram("conv_3_1", dg, regAssign);
 
   string prog =
@@ -707,7 +722,9 @@ TEST_CASE("code from conv_3_1") {
 
   cout << prog << endl;
 
-
+  cout << "Layout struct" << endl;
+  cout << layoutStructString(regAssign.offsets) << endl;
+  
   std::ofstream outf("./test/gencode/" + lowProg.getName() + ".cpp");
   outf << prog;
   outf.close();
