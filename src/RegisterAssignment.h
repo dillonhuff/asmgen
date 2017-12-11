@@ -93,7 +93,8 @@ static inline std::string layoutStructString(std::map<MemChunk*, int>& offsets) 
       auto inNode = toMemInput(nd);
       int readSize = inNode->getReadSize();
 
-      typeStr = "uint" + std::to_string(readSize*8) + "_t [ " + std::to_string(inNode->getMemSize() / readSize) + " ] ";
+      typeStr = "uint" + std::to_string(readSize*8) + "_t [ " +
+        std::to_string(inNode->getMemSize() / readSize) + " ] ";
     }
     decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + std::to_string(ofp.second) + "\n";
   }

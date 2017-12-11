@@ -7,7 +7,7 @@
 
 static inline std::string inlineASMFunction(const std::string& funcName,
                                             std::vector<std::string> asmOps) {
-  std::string res = "void " + funcName + "(void* arg) {\n";
+  std::string res = "void " + funcName + "(layout* arg) {\n";
 
   res += "\t__asm__(\n";
 

@@ -11,7 +11,7 @@ void writeOutFiles(RegisterAssignment& regAssign,
 
   std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
 
-  hd << "#pragma once\n\n #include <stdint.h>\n\n" + layoutStructString(regAssign.offsets) + "\nvoid " + lowProg.getName() + "(void*);\n";
+  hd << "#pragma once\n\n #include <stdint.h>\n\n" + layoutStructString(regAssign.offsets) + "\nvoid " + lowProg.getName() + "(layout*);\n";
   hd.close();
 
 }

@@ -46,7 +46,7 @@ TEST_CASE("Build program from low representation") {
   out.close();
 
   std::ofstream hd("./test/gencode/" + newProgram.getName() + ".h");
-  hd << "#pragma once\nvoid " + newProgram.getName() + "(void*);\n";
+  hd << "#pragma once\nvoid " + newProgram.getName() + "(layout* lt);\n";
   hd.close();
   
   int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
@@ -80,21 +80,25 @@ TEST_CASE("Test conditional move node") {
   cout << "Mux program" << endl;
   cout << prog << endl;
 
-  std::ofstream out("./test/gencode/" + lowProg.getName() + ".cpp");
-  out << prog;
-  out.close();
+  int r = compileCodeAndRun(regAssign, lowProg);
 
-  std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
-  hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
-  hd.close();
+  REQUIRE(r == 0);
   
-  int res = system(("clang++ -std=c++11 ./test/gencode/" + lowProg.getName() + ".cpp " + "./test/gencode/test_mux.cpp").c_str());
+  // std::ofstream out("./test/gencode/" + lowProg.getName() + ".cpp");
+  // out << prog;
+  // out.close();
 
-  REQUIRE(res == 0);
+  // std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
+  // hd << "#pragma once\nvoid " + lowProg.getName() + "(layout*);\n";
+  // hd.close();
+  
+  // int res = system(("clang++ -std=c++11 ./test/gencode/" + lowProg.getName() + ".cpp " + "./test/gencode/test_mux.cpp").c_str());
 
-  res = system("./a.out");
+  // REQUIRE(res == 0);
 
-  REQUIRE(res == 0);
+  // res = system("./a.out");
+
+  // REQUIRE(res == 0);
   
 }
 
@@ -376,10 +380,10 @@ TEST_CASE("Single register printout") {
 
   vector<DataGraph> dgs = coreModuleToDG(regComb);
 
-  assert(dgs.size() > 0);
+  auto clk = dgs[0].addInput("self_clk", 8);
+  auto clk_last = dgs[0].addInput("self_clk_last", 8);
 
-  dgs[0].addInput("self_clk", 8);
-  dgs[0].addInput("self_clk_last", 8);
+  assert(dgs.size() > 0);
 
   auto regAssign = assignRegisters(dgs[0]);
   LowProgram lowProg = buildLowProgram("reg_path", dgs[0], regAssign);
@@ -401,6 +405,9 @@ TEST_CASE("Single register printout") {
     cout << "Dag " << i << " program" << endl;
     cout << prog << endl;
   }
+
+  // regAssign.addInput("self_clk", 8);
+  // regAssign.addInput("self_clk_last", 8);
 
   int r = compileCodeAndRun(regAssign, lowProg);
 
