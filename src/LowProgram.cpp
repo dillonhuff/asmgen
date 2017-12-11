@@ -130,7 +130,7 @@ void appendLowProgram(const DataGraph& dg,
       auto& ra = regAssign.registerAssignment;
 
       auto memOut = toMemOutput(node);
-      int memOffset = 0;
+      int memOffset = regAssign.getOffset(memOut);
 
       auto waddrReg = ra[memOut->getWAddr()];
 
@@ -152,7 +152,7 @@ void appendLowProgram(const DataGraph& dg,
       auto& ra = regAssign.registerAssignment;
 
       auto memIn = toMemInput(node);
-      int memOffset = 0;
+      int memOffset = regAssign.getOffset(memIn);
 
       //auto raddr = ra[memIn->getRAddr()];
       // cout << "Raddr = " << memIn->getRAddr()->toString() << endl;
