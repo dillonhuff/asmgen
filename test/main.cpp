@@ -323,20 +323,20 @@ RegisterAssignment assignRegisters(DataGraph& dg) {
 
     if (notAdded) {
       if (node->getType() == DG_INPUT) {
-        //layout[node->toString()] = offset;
+
         asg.addOffset(node, offset);
         
         offset += toInput(node)->getLength() / 8;
       } else if (node->getType() == DG_OUTPUT) {
-        //layout[node->toString()] = offset;
+
         asg.addOffset(node, offset);
         offset += toOutput(node)->getLength() / 8;
       } else if (node->getType() == DG_MEM_INPUT) {
-        //layout[node->toString()] = offset;
+
         asg.addOffset(node, offset);
         offset += toMemInput(node)->getMemSize();
       } else if (node->getType() == DG_MEM_OUTPUT) {
-        //layout[node->toString()] = offset;
+
         asg.addOffset(node, offset);
         offset += toMemOutput(node)->getMemSize();
       }
@@ -656,14 +656,10 @@ TEST_CASE("Build program from dataflow graph") {
 
 }
 
-DataGraph coreModuleToDG(Module* m) {
-  NGraph g;
-  buildOrderedGraph(m, g);
-  deque<vdisc> topoOrder = topologicalSort(g);
-
-  map<Wireable*, DGNode*> dgVerts;
-
-  DataGraph dg;
+void addDAGNodes(const std::deque<vdisc>& topoOrder,
+                 NGraph& g,
+                 map<Wireable*, DGNode*>& dgVerts,
+                 DataGraph& dg) {
   for (auto& vd : topoOrder) {
     WireNode wd = g.getNode(vd);
 
@@ -793,7 +789,33 @@ DataGraph coreModuleToDG(Module* m) {
       assert(false);
     }
   }
+}
 
+DataGraph coreModuleToDG(Module* m) {
+  NGraph g;
+  buildOrderedGraph(m, g);
+  deque<vdisc> topoOrder = topologicalSort(g);
+
+  CircuitPaths paths = buildCircuitPaths(topoOrder, g, *m);
+
+  cout << "paths.preSequentialAlwaysDAGs.size() = " << paths.preSequentialAlwaysDAGs.size() << endl;
+  cout << "paths.postSequentialAlwaysDAGs.size() = " << paths.postSequentialAlwaysDAGs.size() << endl;
+
+  map<Wireable*, DGNode*> dgVerts;
+  DataGraph dg;
+
+  for (auto& dag : paths.preSequentialDAGs) {
+    assert(dag.nodes.size() == 1);
+    
+    addDAGNodes(addInputs(dag.nodes[0], g), g, dgVerts, dg);
+  }
+
+  for (auto& dag : paths.postSequentialDAGs) {
+    assert(dag.nodes.size() == 1);
+    
+    addDAGNodes(addInputs(dag.nodes[0], g), g, dgVerts, dg);
+  }
+  
   return dg;
 }
 
