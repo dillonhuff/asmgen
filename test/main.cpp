@@ -27,37 +27,41 @@ TEST_CASE("Build tiny program") {
   cout << str << endl;
 }
 
-TEST_CASE("Build program from low representation") {
-  LowProgram newProgram("simd_add");
-  newProgram.addLoad(0, 1, 128, "%xmm0");
-  newProgram.addLoad(128 / 8, 1, 128, "%xmm1");
-  newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "%xmm0", "%xmm1");
-  newProgram.addStore((128 / 8)*2, 1, 128, "%xmm1");
+// TEST_CASE("Build program from low representation") {
+//   LowProgram newProgram("simd_add");
+//   newProgram.addLoad(0, 1, 128, "%xmm0");
+//   newProgram.addLoad(128 / 8, 1, 128, "%xmm1");
+//   newProgram.addArithmetic(ARITH_INT_ADD, 128, 32, "%xmm0", "%xmm1");
+//   newProgram.addStore((128 / 8)*2, 1, 128, "%xmm1");
 
-  REQUIRE(newProgram.size() == 4);
+//   REQUIRE(newProgram.size() == 4);
 
-  string prog =
-    buildASMProg(newProgram);
+//   string prog =
+//     buildASMProg(newProgram);
 
-  cout << prog << endl;
+//   cout << prog << endl;
 
-  std::ofstream out("./test/gencode/" + newProgram.getName() + ".cpp");
-  out << prog;
-  out.close();
+//   int r = compileCodeAndRun(regAssign, prog);
 
-  std::ofstream hd("./test/gencode/" + newProgram.getName() + ".h");
-  hd << "#pragma once\nvoid " + newProgram.getName() + "(layout* lt);\n";
-  hd.close();
+//   REQUIRE(r == 0);
   
-  int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
+  // std::ofstream out("./test/gencode/" + newProgram.getName() + ".cpp");
+  // out << prog;
+  // out.close();
 
-  REQUIRE(res == 0);
-
-  res = system("./a.out");
-
-  REQUIRE(res == 0);
+  // std::ofstream hd("./test/gencode/" + newProgram.getName() + ".h");
+  // hd << "#pragma once\nvoid " + newProgram.getName() + "(layout* lt);\n";
+  // hd.close();
   
-}
+  // int res = system("clang++ -std=c++11 ./test/gencode/test_add.cpp ./test/gencode/simd_add.cpp");
+
+  // REQUIRE(res == 0);
+
+  // res = system("./a.out");
+
+  // REQUIRE(res == 0);
+  
+//}
 
 TEST_CASE("Test conditional move node") {
   DataGraph dg;
