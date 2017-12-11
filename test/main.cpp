@@ -3,6 +3,7 @@
 #include "catch.hpp"
 
 #include "DataGraph.h"
+#include "Output.h"
 #include "LowProgram.h"
 
 #include "coreir.h"
@@ -11,37 +12,6 @@
 using namespace afk;
 using namespace std;
 using namespace CoreIR;
-
-string inlineASMFunction(const std::string& funcName,
-                         vector<string> asmOps) {
-  string res = "void " + funcName + "(void* arg) {\n";
-
-  res += "\t__asm__(\n";
-
-  for (auto& op : asmOps) {
-    res += "\t\t\"" + op + "\\n\"\n";
-  }
-  res += "\t);\n";
-
-  res += "}";
-  
-  return res;
-}
-
-string inlineVoidASMFunction(const std::string& funcName,
-                             vector<string> asmOps) {
-  asmOps.push_back("leave");
-  asmOps.push_back("ret");
-  return inlineASMFunction(funcName, asmOps);
-}
-
-std::string buildASMProg(const LowProgram& prog) {
-  vector<string> opStrings;
-  for (auto iptr : prog.getInstructions()) {
-    opStrings.push_back(iptr->toString());
-  }
-  return inlineVoidASMFunction(prog.getName(), opStrings);
-}
 
 TEST_CASE("Build tiny program") {
   vector<string> asmOps;
@@ -89,103 +59,6 @@ TEST_CASE("Build program from low representation") {
   
 }
 
-class MemChunk {
-public:
-  std::string name;
-  DGNode* origin;
-
-  MemChunk(const std::string& name_,
-           DGNode* const origin_) :
-    name(name_), origin(origin_) {}
-};
-
-struct RegisterAssignment {
-  int maxOffset;
-  std::vector<DGNode*> topoOrder;
-  std::map<DGNode*, std::string> registerAssignment;
-
-  // Should move to using stack vs. heap offsets, or maybe a unified location
-  // type encompassing registers, stack, and heap?
-  std::map<MemChunk*, int> offsets;
-  std::map<DGNode*, MemChunk*> memLocs;
-
-  RegisterAssignment() : maxOffset(0) {}
-
-  int getMaxOffset() const { return maxOffset; }
-
-  void addOffset(DGNode* const origin, const int offset) {
-    auto chk = new MemChunk(origin->toString(), origin);
-    offsets.insert({chk, offset});
-    memLocs.insert({origin, chk});
-    maxOffset += offset;
-  }
-
-  void accessChunk(DGNode* const origin, MemChunk* chk) {
-    memLocs.insert({origin, chk});
-  }
-
-  int getOffset(DGNode* const node) const {
-    auto memChunk = memLocs.find(node);
-
-    cout << "Searching for " << node->toString() << endl;
-
-    assert(memChunk != std::end(memLocs));
-
-    auto& chunk = memChunk->second;
-
-    auto offsetIt = offsets.find(chunk);
-
-    assert(offsetIt != std::end(offsets));
-
-    return offsetIt->second;
-  }
-
-  ~RegisterAssignment() {
-    for (auto& ofp : offsets) {
-      delete ofp.first;
-    }
-  }
-};
-
-std::string layoutStructString(std::map<MemChunk*, int>& offsets) {
-
-  vector<pair<MemChunk*, int> > sortedOffs;
-  for (auto& ofp : offsets) {
-    sortedOffs.push_back({ofp.first, ofp.second});
-  }
-
-  afk::sort_lt(sortedOffs, [](const pair<MemChunk*, int>& l) {
-      return l.second;
-    });
-
-  string decls = "";
-  for (auto& ofp : sortedOffs) {
-    string name = ofp.first->name;
-    std::replace(name.begin(), name.end(), '.', '_');
-    std::replace(name.begin(), name.end(), ':', '_');
-    std::replace(name.begin(), name.end(), ' ', '_');
-    std::replace(name.begin(), name.end(), '=', '_');
-
-    string typeStr = "<TYPE>";
-
-    auto nd = ofp.first->origin;
-    if (nd->getType() == DG_INPUT) {
-      auto inNode = toInput(nd);
-      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
-    } else if (nd->getType() == DG_OUTPUT) {
-      auto inNode = toOutput(nd);
-      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
-    } else if (nd->getType() == DG_MEM_INPUT) {
-      auto inNode = toMemInput(nd);
-      int readSize = inNode->getReadSize();
-
-      typeStr = "uint" + to_string(readSize*8) + "_t [ " + to_string(inNode->getMemSize() / readSize) + " ] ";
-    }
-    decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + to_string(ofp.second) + "\n";
-  }
-
-  return "struct __attribute__((packed)) layout {\n" + decls + "\n};\n";
-}
 std::vector<std::string>
 nowDeadRegisters(DGNode* op,
                  DataGraph& dg,
@@ -200,10 +73,6 @@ nowDeadRegisters(DGNode* op,
     if (dg.getOutEdges(op0).size() == 1) {
       freedRegs.push_back(regAssignment[op0]);
     }
-
-    // if (dg.getOutEdges(op1).size() == 1) {
-    //   freedRegs.push_back(regAssignment[op1]);
-    // }
 
     cout << "Freeing " << freedRegs.size() << " regs:";
     for (auto& reg : freedRegs) {
@@ -899,26 +768,6 @@ TEST_CASE("code from conv_3_1") {
   // REQUIRE(res == 0);
   
   deleteContext(c);
-}
-
-int compileCode(RegisterAssignment& regAssign,
-                LowProgram& lowProg) {
-
-  string prog =
-    buildASMProg(lowProg);
-  
-  std::ofstream outf("./test/gencode/" + lowProg.getName() + ".cpp");
-  outf << "#include \"" + lowProg.getName() + ".h\"\n\n" + prog;
-  outf.close();
-
-  std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
-
-  hd << "#pragma once\n\n #include <stdint.h>\n\n" + layoutStructString(regAssign.offsets) + "\nvoid " + lowProg.getName() + "(void*);\n";
-  hd.close();
-  
-  int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
-
-  return res;
 }
 
 TEST_CASE("Single register printout") {

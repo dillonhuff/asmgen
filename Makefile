@@ -177,6 +177,33 @@ src/LowProgram.cpp.s:
 	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/LowProgram.cpp.s
 .PHONY : src/LowProgram.cpp.s
 
+src/Output.o: src/Output.cpp.o
+
+.PHONY : src/Output.o
+
+# target to build an object file
+src/Output.cpp.o:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/Output.cpp.o
+.PHONY : src/Output.cpp.o
+
+src/Output.i: src/Output.cpp.i
+
+.PHONY : src/Output.i
+
+# target to preprocess a source file
+src/Output.cpp.i:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/Output.cpp.i
+.PHONY : src/Output.cpp.i
+
+src/Output.s: src/Output.cpp.s
+
+.PHONY : src/Output.s
+
+# target to generate assembly for a file
+src/Output.cpp.s:
+	$(MAKE) -f CMakeFiles/all-tests.dir/build.make CMakeFiles/all-tests.dir/src/Output.cpp.s
+.PHONY : src/Output.cpp.s
+
 test/main.o: test/main.cpp.o
 
 .PHONY : test/main.o
@@ -219,6 +246,9 @@ help:
 	@echo "... src/LowProgram.o"
 	@echo "... src/LowProgram.i"
 	@echo "... src/LowProgram.s"
+	@echo "... src/Output.o"
+	@echo "... src/Output.i"
+	@echo "... src/Output.s"
 	@echo "... test/main.o"
 	@echo "... test/main.i"
 	@echo "... test/main.s"
