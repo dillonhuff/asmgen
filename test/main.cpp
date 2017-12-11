@@ -590,19 +590,7 @@ TEST_CASE("Build program from dataflow graph") {
 
 }
 
-TEST_CASE("code from conv_3_1") {
-  Context* c = newContext();
-  CoreIRLoadLibrary_commonlib(c);
-
-  if (!loadFromFile(c,"./test/conv_3_1.json")) {
-    cout << "Could not Load from json!!" << endl;
-    c->die();
-  }
-
-  c->runPasses({"rungenerators","flattentypes","flatten", "wireclocks-coreir"});
-
-  Module* m = c->getGlobal()->getModule("DesignTop");
-
+DataGraph coreModuleToDG(Module* m) {
   NGraph g;
   buildOrderedGraph(m, g);
   deque<vdisc> topoOrder = topologicalSort(g);
@@ -740,6 +728,22 @@ TEST_CASE("code from conv_3_1") {
     }
   }
 
+  return dg;
+}
+
+TEST_CASE("code from conv_3_1") {
+  Context* c = newContext();
+  CoreIRLoadLibrary_commonlib(c);
+
+  if (!loadFromFile(c,"./test/conv_3_1.json")) {
+    cout << "Could not Load from json!!" << endl;
+    c->die();
+  }
+
+  c->runPasses({"rungenerators","flattentypes","flatten", "wireclocks-coreir"});
+
+  Module* m = c->getGlobal()->getModule("DesignTop");
+  auto dg = coreModuleToDG(m);
 
   auto regAssign = assignRegisters(dg);
   vector<DGNode*> regOrder = regAssign.topoOrder;
@@ -783,7 +787,7 @@ int compileCode(RegisterAssignment& regAssign,
   outf.close();
 
   std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
-  hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
+  hd << "#pragma once\n\n" + layoutStructString(regAssign.offsets) + "\nvoid " + lowProg.getName() + "(void*);\n";
   hd.close();
   
   int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
@@ -793,5 +797,44 @@ int compileCode(RegisterAssignment& regAssign,
 
 TEST_CASE("Single register printout") {
 
-  
+  Context* c = newContext();
+
+  uint width = 16;
+
+  Type* regType = c->Record({
+      {"clk", c->Named("coreir.clkIn")},
+        {"in_0", c->BitIn()->Arr(width)},
+          {"in_1", c->BitIn()->Arr(width)},
+            {"out_0", c->Bit()->Arr(width)},
+              });
+
+  Module* regComb =
+    c->getGlobal()->newModuleDecl("regComb", regType);
+
+  ModuleDef* def = regComb->newModuleDef();
+
+  def->addInstance("add0", "coreir.add", {{"width", Const::make(c, width)}});
+  def->addInstance("reg0", "coreir.reg", {{"width", Const::make(c, width)}});
+
+  def->connect("self.in_0", "add0.in0");
+  def->connect("self.in_1", "add0.in1");
+
+  def->connect("add0.out", "reg0.in");
+
+  def->connect("reg0.out", "self.out_0");
+
+  def->connect("self.clk", "reg0.clk");
+
+  regComb->setDef(def);
+
+  DataGraph dg = coreModuleToDG(regComb);
+
+  auto regAssign = assignRegisters(dg);
+  vector<DGNode*> regOrder = regAssign.topoOrder;
+
+  LowProgram lowProg = buildLowProgram("reg_path", dg, regAssign);
+
+  compileCode(regAssign, lowProg);
+
+  deleteContext(c);
 }
