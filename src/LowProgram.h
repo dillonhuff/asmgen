@@ -267,10 +267,22 @@ class LowProgram {
 protected:
   std::string name;
   std::vector<Instruction*> instructions;
+  std::string clkName;
+  std::string clkLastName;
+  bool hasClk;
 
 public:
 
-  LowProgram(const std::string& name_) : name(name_) {}
+  LowProgram(const std::string& name_) : name(name_), hasClk(false) {}
+
+  bool hasClock() const { return hasClk; }
+
+  void setClock(const std::string& cn,
+                const std::string& cln) {
+    hasClk = true;
+    clkName = cn;
+    clkLastName = cln;
+  }
 
   std::string getName() const { return name; }
 

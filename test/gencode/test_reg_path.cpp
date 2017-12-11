@@ -9,6 +9,8 @@ int main() {
   layout lt;
   lt.self_in_0 = 1;
   lt.self_in_1 = 3;
+  lt.self_clk = 1;
+  lt.self_clk_last = 0;
 
   reg_path(&lt);
 

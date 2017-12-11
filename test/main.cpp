@@ -22,7 +22,7 @@ TEST_CASE("Build tiny program") {
   asmOps.push_back("leave");
   asmOps.push_back("ret");
 
-  string str = inlineASMFunction("test_add_func", asmOps);
+  string str = inlineASMFunction("test_add_func", false, asmOps);
 
   cout << str << endl;
 }
@@ -412,6 +412,9 @@ TEST_CASE("Single register printout") {
 
   // regAssign.addInput("self_clk", 8);
   // regAssign.addInput("self_clk_last", 8);
+
+  lowProg.setClock("self_clk",
+                   "self_clk_last");
 
   int r = compileCodeAndRun(regAssign, lowProg);
 
