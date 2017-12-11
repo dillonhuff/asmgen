@@ -771,3 +771,27 @@ TEST_CASE("code from conv_3_1") {
   
   deleteContext(c);
 }
+
+int compileCode(RegisterAssignment& regAssign,
+                LowProgram& lowProg) {
+
+  string prog =
+    buildASMProg(lowProg);
+  
+  std::ofstream outf("./test/gencode/" + lowProg.getName() + ".cpp");
+  outf << prog;
+  outf.close();
+
+  std::ofstream hd("./test/gencode/" + lowProg.getName() + ".h");
+  hd << "#pragma once\nvoid " + lowProg.getName() + "(void*);\n";
+  hd.close();
+  
+  int res = system(("clang++ -std=c++11 -c ./test/gencode/" + lowProg.getName() + ".cpp").c_str());
+
+  return res;
+}
+
+TEST_CASE("Single register printout") {
+
+  
+}
