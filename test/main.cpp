@@ -263,8 +263,7 @@ nowDeadRegisters(DGNode* op,
   return {};
 }
 
-void appendAssignRegisters(DataGraph& dg,
-                           RegisterAssignment& asg) {
+std::vector<DGNode*> topologicalSort(DataGraph& dg) {
   vector<DGNode*> nodeOrder;
   vector<DGNode*> ins = allInputs(dg);
 
@@ -312,6 +311,12 @@ void appendAssignRegisters(DataGraph& dg,
 
   }
 
+  return nodeOrder;
+}
+void appendAssignRegisters(DataGraph& dg,
+                           RegisterAssignment& asg) {
+
+  auto nodeOrder = topologicalSort(dg);
   afk::concat(asg.topoOrder, nodeOrder);
 
   int offset = asg.getMaxOffset();
@@ -963,7 +968,8 @@ TEST_CASE("Single register printout") {
   
   for (uint i = 1; i < dgs.size(); i++) {
     appendAssignRegisters(dgs[i], regAssign);
-    appendLowProgram(dgs[i], regAssign, lowProg);
+    auto tpSort = topologicalSort(dgs[i]);
+    appendLowProgram(dgs[i], regAssign, tpSort, lowProg);
 
     prog =
       buildASMProg(lowProg);
