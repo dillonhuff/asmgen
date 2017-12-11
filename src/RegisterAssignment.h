@@ -100,3 +100,8 @@ static inline std::string layoutStructString(std::map<MemChunk*, int>& offsets) 
 
   return "struct __attribute__((packed)) layout {\n" + decls + "\n};\n";
 }
+
+void appendAssignRegisters(DataGraph& dg,
+                           RegisterAssignment& asg);
+
+RegisterAssignment assignRegisters(DataGraph& dg);
