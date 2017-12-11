@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 
+#include "DataGraph.h"
+#include "RegisterAssignment.h"
+
 using namespace std;
 
 enum TestType {
@@ -321,3 +324,11 @@ public:
 };
 
 
+LowProgram buildLowProgram(const std::string& name,
+                           const DataGraph& dg,
+                           RegisterAssignment& regAssign);
+
+void appendLowProgram(const DataGraph& dg,
+                      RegisterAssignment& regAssign,
+                      std::vector<DGNode*>& topoOrder,
+                      LowProgram& prog);
