@@ -36,7 +36,7 @@ public:
 
   void setName(const std::string& nn) { name = nn; }
 
-  virtual std::string toString() const { return "DGIn: " + name; }
+  virtual std::string toString() const { return name; }
 
   virtual DGType getType() const { return DG_INPUT; }
 
@@ -50,7 +50,7 @@ class DGConst : public DGNode {
 public:
   DGConst(const int value_, const int length_) : value(value_), length(length_) {}
 
-  virtual std::string toString() const { return "Const: " + std::to_string(value); }
+  virtual std::string toString() const { return std::to_string(value); }
 
   int getValue() const { return value; }
   int getLength() const { return length; }
@@ -137,7 +137,7 @@ public:
 
   int getLength() const { return length; }
 
-  virtual std::string toString() const { return "DGOut = " + name; }
+  virtual std::string toString() const { return name; }
 };
 
 class DGBinop : public DGNode {
