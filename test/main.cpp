@@ -316,6 +316,46 @@ TEST_CASE("code from conv_3_1") {
   c->runPasses({"rungenerators","flattentypes","flatten", "wireclocks-coreir"});
 
   Module* m = c->getGlobal()->getModule("DesignTop");
+
+  vector<DataGraph> dgs = coreModuleToDG(m);
+
+  auto clk = dgs[0].addInput("self_clk", 8);
+  auto clk_last = dgs[0].addInput("self_clk_last", 8);
+
+  assert(dgs.size() > 0);
+
+  auto regAssign = assignRegisters(dgs[0]);
+  LowProgram lowProg = buildLowProgram("conv_3_1", dgs[0], regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Dag 0 program" << endl;
+  cout << prog << endl;
+
+  for (uint i = 1; i < dgs.size(); i++) {
+    appendAssignRegisters(dgs[i], regAssign);
+    auto tpSort = topologicalSort(dgs[i]);
+    appendLowProgram(dgs[i], regAssign, tpSort, lowProg);
+
+    prog =
+      buildASMProg(lowProg);
+
+    cout << "Dag " << i << " program" << endl;
+    cout << prog << endl;
+  }
+
+  // regAssign.addInput("self_clk", 8);
+  // regAssign.addInput("self_clk_last", 8);
+
+  lowProg.setClock("self_clk",
+                   "self_clk_last");
+
+  int r = compileCodeAndRun(regAssign, lowProg);
+
+  REQUIRE(r == 0);
+
+  deleteContext(c);
   
   // auto dg = coreModuleToDG(m)[0];
 

@@ -4,22 +4,11 @@
     "modules":{
       "DesignTop":{
         "type":["Record",{
-          "in":["Array",1,["Array",16,"BitIn"]],
+          "clk":["Named","coreir.clkIn"],
+          "in_0":["Array",16,"BitIn"],
           "out":["Array",16,"Bit"]
         }],
         "instances":{
-          "_341_pt":{
-            "genref":"mantle.wire",
-            "genargs":{"type":["CoreIRType",["Array",16,"Bit"]]}
-          },
-          "_345_pt":{
-            "genref":"mantle.wire",
-            "genargs":{"type":["CoreIRType",["Array",16,"Bit"]]}
-          },
-          "_349_pt":{
-            "genref":"mantle.wire",
-            "genargs":{"type":["CoreIRType",["Array",16,"Bit"]]}
-          },
           "add_340_343_344":{
             "genref":"coreir.add",
             "genargs":{"width":["Int",16]}
@@ -52,9 +41,146 @@
             "genargs":{"width":["Int",16]},
             "modargs":{"value":[["BitVector",16],7]}
           },
-          "lb_p4_clamped_stencil_update_stream":{
-            "genref":"commonlib.Linebuffer",
-            "genargs":{"bitwidth":["Int",16], "image_width":["Int",10], "stencil_height":["Int",3], "stencil_width":["Int",1]}
+          "in_0_auto_reg":{
+            "genref":"coreir.reg",
+            "genargs":{"width":["Int",16]},
+            "modargs":{"init":[["BitVector",16],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$add_r":{
+            "genref":"coreir.add",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$add_w":{
+            "genref":"coreir.add",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$c1":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],1]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$max_const":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],10]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$mem":{
+            "genref":"coreir.mem",
+            "genargs":{"depth":["Int",10], "width":["Int",16]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$raddr$enMux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0":{
+            "genref":"coreir.reg",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"init":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$raddr_eq":{
+            "genref":"coreir.eq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$veq":{
+            "genref":"coreir.neq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$waddr$enMux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0":{
+            "genref":"coreir.reg",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"init":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$waddr_eq":{
+            "genref":"coreir.eq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1$zero_const":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_1_valid_term":{
+            "modref":"corebit.term"
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$add_r":{
+            "genref":"coreir.add",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$add_w":{
+            "genref":"coreir.add",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$c1":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],1]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$max_const":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],10]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$mem":{
+            "genref":"coreir.mem",
+            "genargs":{"depth":["Int",10], "width":["Int",16]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$raddr$enMux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0":{
+            "genref":"coreir.reg",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"init":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$raddr_eq":{
+            "genref":"coreir.eq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$veq":{
+            "genref":"coreir.neq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$waddr$enMux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0":{
+            "genref":"coreir.reg",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"init":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$waddr_eq":{
+            "genref":"coreir.eq",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux":{
+            "genref":"coreir.mux",
+            "genargs":{"width":["Int",4]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2$zero_const":{
+            "genref":"coreir.const",
+            "genargs":{"width":["Int",4]},
+            "modargs":{"value":[["BitVector",4],0]}
+          },
+          "lb_p4_clamped_stencil_update_stream$mem_2_valid_term":{
+            "modref":"corebit.term"
           },
           "lb_p4_clamped_stencil_update_stream_wen":{
             "modref":"corebit.const",
@@ -74,12 +200,6 @@
           }
         },
         "connections":[
-          ["_341_pt.in","lb_p4_clamped_stencil_update_stream.out.0.0"],
-          ["_341_pt.out","mul_3423_343.in0"],
-          ["_345_pt.in","lb_p4_clamped_stencil_update_stream.out.1.0"],
-          ["_345_pt.out","mul_3465_347.in0"],
-          ["_349_pt.in","lb_p4_clamped_stencil_update_stream.out.2.0"],
-          ["_349_pt.out","mul_3507_351.in0"],
           ["add_340_343_344.in0","const0_0.out"],
           ["add_340_343_344.in1","mul_3423_343.out"],
           ["add_340_343_344.out","add_340_347_348.in0"],
@@ -90,9 +210,77 @@
           ["const3_3.out","mul_3423_343.in1"],
           ["const5_5.out","mul_3465_347.in1"],
           ["const7_7.out","mul_3507_351.in1"],
-          ["lb_p4_clamped_stencil_update_stream.in","self.in.0"],
-          ["lb_p4_clamped_stencil_update_stream.wen","lb_p4_clamped_stencil_update_stream_wen.out"]
-        ]
+          ["in_0_auto_reg.clk","self.clk"],
+          ["in_0_auto_reg.in","self.in_0"],
+          ["in_0_auto_reg.out","lb_p4_clamped_stencil_update_stream$mem_1$mem.wdata"],
+          ["in_0_auto_reg.out","mul_3507_351.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_r.in0","lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_r.in1","lb_p4_clamped_stencil_update_stream$mem_1$c1.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_r.out","lb_p4_clamped_stencil_update_stream$mem_1$raddr_eq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_r.out","lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_w.in0","lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_w.in1","lb_p4_clamped_stencil_update_stream$mem_1$c1.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_w.out","lb_p4_clamped_stencil_update_stream$mem_1$waddr_eq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$add_w.out","lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$max_const.out","lb_p4_clamped_stencil_update_stream$mem_1$raddr_eq.in1"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$max_const.out","lb_p4_clamped_stencil_update_stream$mem_1$waddr_eq.in1"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.raddr","lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.rdata","lb_p4_clamped_stencil_update_stream$mem_2$mem.wdata"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.rdata","mul_3465_347.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.waddr","lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$mem.wen","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$enMux.in0","lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$enMux.in1","lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$enMux.out","lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$enMux.sel","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0.out","lb_p4_clamped_stencil_update_stream$mem_1$veq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr_eq.out","lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux.sel"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux.in1","lb_p4_clamped_stencil_update_stream$mem_1$zero_const.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$veq.in1","lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$veq.out","lb_p4_clamped_stencil_update_stream$mem_1_valid_term.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr$enMux.in0","lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr$enMux.in1","lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr$enMux.out","lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr$enMux.sel","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr_eq.out","lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux.sel"],
+          ["lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux.in1","lb_p4_clamped_stencil_update_stream$mem_1$zero_const.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_r.in0","lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_r.in1","lb_p4_clamped_stencil_update_stream$mem_2$c1.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_r.out","lb_p4_clamped_stencil_update_stream$mem_2$raddr_eq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_r.out","lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_w.in0","lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_w.in1","lb_p4_clamped_stencil_update_stream$mem_2$c1.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_w.out","lb_p4_clamped_stencil_update_stream$mem_2$waddr_eq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$add_w.out","lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$max_const.out","lb_p4_clamped_stencil_update_stream$mem_2$raddr_eq.in1"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$max_const.out","lb_p4_clamped_stencil_update_stream$mem_2$waddr_eq.in1"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$mem.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$mem.raddr","lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$mem.rdata","mul_3423_343.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$mem.waddr","lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$mem.wen","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$enMux.in0","lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$enMux.in1","lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$enMux.out","lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$enMux.sel","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr$reg0.out","lb_p4_clamped_stencil_update_stream$mem_2$veq.in0"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr_eq.out","lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux.sel"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux.in1","lb_p4_clamped_stencil_update_stream$mem_2$zero_const.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$veq.in1","lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$veq.out","lb_p4_clamped_stencil_update_stream$mem_2_valid_term.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr$enMux.in0","lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr$enMux.in1","lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr$enMux.out","lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.in"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr$enMux.sel","lb_p4_clamped_stencil_update_stream_wen.out"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr$reg0.clk","self.clk"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr_eq.out","lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux.sel"],
+          ["lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux.in1","lb_p4_clamped_stencil_update_stream$mem_2$zero_const.out"]
+        ],
+        "metadata":{"symtable":{"_341_pt.in":["lb_p4_clamped_stencil_update_stream","out_0_0"],"_341_pt.out":["mul_3423_343","in0"],"_345_pt.in":["lb_p4_clamped_stencil_update_stream","out_1_0"],"_345_pt.out":["mul_3465_347","in0"],"_349_pt.in":["lb_p4_clamped_stencil_update_stream","out_2_0"],"_349_pt.out":["mul_3507_351","in0"],"lb_p4_clamped_stencil_update_stream$mem_1$raddr.clk":["lb_p4_clamped_stencil_update_stream$mem_1","clk"],"lb_p4_clamped_stencil_update_stream$mem_1$raddr.en":["lb_p4_clamped_stencil_update_stream$mem_1","wen"],"lb_p4_clamped_stencil_update_stream$mem_1$raddr.in":["lb_p4_clamped_stencil_update_stream$mem_1$raddr_mux","out"],"lb_p4_clamped_stencil_update_stream$mem_1$raddr.out":["lb_p4_clamped_stencil_update_stream$mem_1$mem","raddr"],"lb_p4_clamped_stencil_update_stream$mem_1$waddr.clk":["lb_p4_clamped_stencil_update_stream$mem_1","clk"],"lb_p4_clamped_stencil_update_stream$mem_1$waddr.en":["lb_p4_clamped_stencil_update_stream$mem_1","wen"],"lb_p4_clamped_stencil_update_stream$mem_1$waddr.in":["lb_p4_clamped_stencil_update_stream$mem_1$waddr_mux","out"],"lb_p4_clamped_stencil_update_stream$mem_1$waddr.out":["lb_p4_clamped_stencil_update_stream$mem_1$mem","waddr"],"lb_p4_clamped_stencil_update_stream$mem_1.rdata":["lb_p4_clamped_stencil_update_stream$mem_2","wdata"],"lb_p4_clamped_stencil_update_stream$mem_1.valid":["lb_p4_clamped_stencil_update_stream$mem_1_valid_term","in"],"lb_p4_clamped_stencil_update_stream$mem_1.wdata":["lb_p4_clamped_stencil_update_stream","in"],"lb_p4_clamped_stencil_update_stream$mem_1.wen":["lb_p4_clamped_stencil_update_stream","wen"],"lb_p4_clamped_stencil_update_stream$mem_2$raddr.clk":["lb_p4_clamped_stencil_update_stream$mem_2","clk"],"lb_p4_clamped_stencil_update_stream$mem_2$raddr.en":["lb_p4_clamped_stencil_update_stream$mem_2","wen"],"lb_p4_clamped_stencil_update_stream$mem_2$raddr.in":["lb_p4_clamped_stencil_update_stream$mem_2$raddr_mux","out"],"lb_p4_clamped_stencil_update_stream$mem_2$raddr.out":["lb_p4_clamped_stencil_update_stream$mem_2$mem","raddr"],"lb_p4_clamped_stencil_update_stream$mem_2$waddr.clk":["lb_p4_clamped_stencil_update_stream$mem_2","clk"],"lb_p4_clamped_stencil_update_stream$mem_2$waddr.en":["lb_p4_clamped_stencil_update_stream$mem_2","wen"],"lb_p4_clamped_stencil_update_stream$mem_2$waddr.in":["lb_p4_clamped_stencil_update_stream$mem_2$waddr_mux","out"],"lb_p4_clamped_stencil_update_stream$mem_2$waddr.out":["lb_p4_clamped_stencil_update_stream$mem_2$mem","waddr"],"lb_p4_clamped_stencil_update_stream$mem_2.rdata":["lb_p4_clamped_stencil_update_stream","out_0_0"],"lb_p4_clamped_stencil_update_stream$mem_2.valid":["lb_p4_clamped_stencil_update_stream$mem_2_valid_term","in"],"lb_p4_clamped_stencil_update_stream$mem_2.wdata":["lb_p4_clamped_stencil_update_stream$mem_1$mem","rdata"],"lb_p4_clamped_stencil_update_stream$mem_2.wen":["lb_p4_clamped_stencil_update_stream","wen"],"lb_p4_clamped_stencil_update_stream.in":["self","in_0"],"lb_p4_clamped_stencil_update_stream.out_0_0":["mul_3423_343","in0"],"lb_p4_clamped_stencil_update_stream.out_1_0":["mul_3465_347","in0"],"lb_p4_clamped_stencil_update_stream.out_2_0":["mul_3507_351","in0"],"lb_p4_clamped_stencil_update_stream.wen":["lb_p4_clamped_stencil_update_stream_wen","out"]}}
       }
     }
   }
