@@ -468,8 +468,9 @@ string to64Bit(const std::string& str) {
 
 void appendLowProgram(const DataGraph& dg,
                       RegisterAssignment& regAssign,
+                      std::vector<DGNode*>& topoOrder,
                       LowProgram& prog) {
-  for (auto& node : regAssign.topoOrder) {
+  for (auto& node : topoOrder) { //regAssign.topoOrder) {
     if (node->getType() == DG_INPUT) {
       auto in = toInput(node);
 
@@ -607,7 +608,7 @@ LowProgram buildLowProgram(const std::string& name,
                            RegisterAssignment& regAssign) {
   LowProgram prog(name);
 
-  appendLowProgram(dg, regAssign, prog);
+  appendLowProgram(dg, regAssign, regAssign.topoOrder, prog);
 
   return prog;
 }
@@ -954,10 +955,22 @@ TEST_CASE("Single register printout") {
   auto regAssign = assignRegisters(dgs[0]);
   LowProgram lowProg = buildLowProgram("reg_path", dgs[0], regAssign);
 
-  // for (uint i = 1; i < dgs.size(); i++) {
-  //   appendAssignRegisters(dgs[i], regAssign);
-  //   appendLowProgram(dgs[i], regAssign, lowProg);
-  // }
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Dag 0 program" << endl;
+  cout << prog << endl;
+  
+  for (uint i = 1; i < dgs.size(); i++) {
+    appendAssignRegisters(dgs[i], regAssign);
+    appendLowProgram(dgs[i], regAssign, lowProg);
+
+    prog =
+      buildASMProg(lowProg);
+
+    cout << "Dag " << i << " program" << endl;
+    cout << prog << endl;
+  }
 
   compileCode(regAssign, lowProg);
 
