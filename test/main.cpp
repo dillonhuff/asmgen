@@ -98,19 +98,35 @@ struct RegisterAssignment {
 };
 
 std::string layoutStructString(std::map<DGNode*, int>& offsets) {
+
   vector<pair<DGNode*, int> > sortedOffs;
+  for (auto& ofp : offsets) {
+    sortedOffs.push_back({ofp.first, ofp.second});
+  }
+
   afk::sort_lt(sortedOffs, [](const pair<DGNode*, int>& l) {
       return l.second;
     });
 
   string decls = "";
-  for (auto& ofp : offsets) {
+  for (auto& ofp : sortedOffs) {
     string name = ofp.first->toString();
     std::replace(name.begin(), name.end(), '.', '_');
     std::replace(name.begin(), name.end(), ':', '_');
     std::replace(name.begin(), name.end(), ' ', '_');
     std::replace(name.begin(), name.end(), '=', '_');
-    decls += "\t <TYPE> " + name + ";\n";
+
+    string typeStr = "<TYPE>";
+
+    auto nd = ofp.first;
+    if (nd->getType() == DG_INPUT) {
+      auto inNode = toInput(nd);
+      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
+    } else if (nd->getType() == DG_OUTPUT) {
+      auto inNode = toOutput(nd);
+      typeStr = "uint" + to_string(inNode->getLength()) + "_t";
+    }
+    decls += "\t" + typeStr + " "  + name + ";" + " // Offset = " + to_string(ofp.second) + "\n";
   }
 
   return "struct __attribute__((packed)) layout {\n" + decls + "\n}\n";
