@@ -821,6 +821,9 @@ std::vector<DataGraph> coreModuleToDG(Module* m) {
   cout << "paths.preSequentialAlwaysDAGs.size() = " << paths.preSequentialAlwaysDAGs.size() << endl;
   cout << "paths.postSequentialAlwaysDAGs.size() = " << paths.postSequentialAlwaysDAGs.size() << endl;
 
+  cout << "paths.preSequentialDAGs.size() = " << paths.preSequentialDAGs.size() << endl;
+  cout << "paths.postSequentialDAGs.size() = " << paths.postSequentialDAGs.size() << endl;
+  
   map<Wireable*, DGNode*> dgVerts;
   vector<DataGraph> dgs;
 
@@ -840,6 +843,8 @@ std::vector<DataGraph> coreModuleToDG(Module* m) {
     addDAGNodes(addInputs(dag.nodes[0], g), g, dgVerts, dg);
     dgs.push_back(dg);
   }
+
+  cout << "# of dags = " << dgs.size() << endl;
   
   return dgs;
 }
@@ -949,10 +954,10 @@ TEST_CASE("Single register printout") {
   auto regAssign = assignRegisters(dgs[0]);
   LowProgram lowProg = buildLowProgram("reg_path", dgs[0], regAssign);
 
-  for (uint i = 1; i < dgs.size(); i++) {
-    appendAssignRegisters(dgs[i], regAssign);
-    appendLowProgram(dgs[i], regAssign, lowProg);
-  }
+  // for (uint i = 1; i < dgs.size(); i++) {
+  //   appendAssignRegisters(dgs[i], regAssign);
+  //   appendLowProgram(dgs[i], regAssign, lowProg);
+  // }
 
   compileCode(regAssign, lowProg);
 
