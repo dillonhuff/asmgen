@@ -135,6 +135,9 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
                  NGraph& g,
                  map<Wireable*, DGNode*>& dgVerts,
                  DataGraph& dg) {
+
+  cout << "Starting conversion" << endl;
+
   for (auto& vd : topoOrder) {
     WireNode wd = g.getNode(vd);
 
@@ -163,6 +166,7 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
       // TODO: Add constant value computation
       auto dc = dg.addConstant(1, 16);
 
+      cout << "Adding constant " << inst->sel("out")->toString() << " node " << dc->toString() << endl;
       dgVerts[inst->sel("out")] = dc;
     } else if (isInstance(wd.getWire())) {
 
@@ -228,6 +232,7 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
         auto outp = dg.addOutput(inst->toString(),
                                  8,
                                  dgVerts[in.getWire()]);
+
         dgVerts[inst] = outp;
 
       } else if (isMemoryInstance(inst)) {
@@ -344,9 +349,6 @@ TEST_CASE("code from conv_3_1") {
     cout << "Dag " << i << " program" << endl;
     cout << prog << endl;
   }
-
-  // regAssign.addInput("self_clk", 8);
-  // regAssign.addInput("self_clk_last", 8);
 
   lowProg.setClock("self_clk",
                    "self_clk_last");
