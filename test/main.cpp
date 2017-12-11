@@ -241,12 +241,17 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
           auto inConns = getInputConnections(vd, g);
           auto waddr = findArg("waddr", inConns);
           auto wdata = findArg("wdata", inConns);
-          
+
           auto in = dg.addMemOutput(inst->toString(),
                                     dgVerts[waddr.getWire()],
                                     dgVerts[wdata.getWire()],
                                     10*2,
                                     2);
+
+          cout << "Adding memoutput = " << in->toString() << " ";
+          cout << "for node " << nodeString(wd) << endl;
+          
+          
 
         } else {
 

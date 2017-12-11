@@ -91,9 +91,9 @@ public:
   virtual DGType getType() const { return DG_MEM_OUTPUT; }
 
   virtual std::string toString() const {
-    return name + " " + waddr->toString() + " " +
-      wdata->toString() + " " + std::to_string(memSize) + " " +
-      std::to_string(readSize);
+    return name;// + " " + waddr->toString() + " " +
+      // wdata->toString() + " " + std::to_string(memSize) + " " +
+      // std::to_string(readSize);
   }
 };
 
