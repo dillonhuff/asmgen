@@ -21,6 +21,20 @@ string to64Bit(const std::string& str) {
   if (str == "%r11d") {
     return "%r11";
   }
+
+  if (str == "%r9d") {
+    return "%r9";
+  }
+
+  if (str == "%r8d") {
+    return "%r8";
+  }
+
+  if (str == "%r7d") {
+    return "%r7";
+  }
+  
+  cout << "Unsupported register = " << str << endl;
   
   assert(false);
 }

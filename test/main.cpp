@@ -394,7 +394,7 @@ TEST_CASE("code from conv_3_1") {
 
   // REQUIRE(res == 0);
   
-  deleteContext(c);
+  // deleteContext(c);
 }
 
 TEST_CASE("Single register printout") {
