@@ -80,7 +80,7 @@ void appendAssignRegisters(DataGraph& dg,
   auto nodeOrder = topologicalSort(dg);
   afk::concat(asg.topoOrder, nodeOrder);
 
-  int offset = asg.getMaxOffset();
+  //int offset = asg.getMaxOffset();
   for (auto& node : nodeOrder) {
 
     bool notAdded = true;
@@ -95,21 +95,21 @@ void appendAssignRegisters(DataGraph& dg,
     if (notAdded) {
       if (node->getType() == DG_INPUT) {
 
-        asg.addOffset(node, offset);
+        asg.addOffset(node, toInput(node)->getLength() / 8); //offset);
         
-        offset += toInput(node)->getLength() / 8;
+        //offset += toInput(node)->getLength() / 8;
       } else if (node->getType() == DG_OUTPUT) {
 
-        asg.addOffset(node, offset);
-        offset += toOutput(node)->getLength() / 8;
+        asg.addOffset(node, toOutput(node)->getLength() / 8); //offset);
+        //offset += toOutput(node)->getLength() / 8;
       } else if (node->getType() == DG_MEM_INPUT) {
 
-        asg.addOffset(node, offset);
-        offset += toMemInput(node)->getMemSize();
+        asg.addOffset(node, toMemInput(node)->getMemSize()); //offset);
+        //offset += toMemInput(node)->getMemSize();
       } else if (node->getType() == DG_MEM_OUTPUT) {
 
-        asg.addOffset(node, offset);
-        offset += toMemOutput(node)->getMemSize();
+        asg.addOffset(node, toMemOutput(node)->getMemSize()); //offset);
+        //offset += toMemOutput(node)->getMemSize();
       }
     }
 

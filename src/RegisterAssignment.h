@@ -26,13 +26,14 @@ struct RegisterAssignment {
 
   int getMaxOffset() const { return maxOffset; }
 
-  void addOffset(DGNode* const origin, const int offset) {
+  //void addOffset(DGNode* const origin, const int offset) {
+  void addOffset(DGNode* const origin, const int length) {
     auto chk = new MemChunk(origin->toString(), origin);
-    offsets.insert({chk, offset});
+    offsets.insert({chk, maxOffset});
     memLocs.insert({origin, chk});
 
     std::cout << "MaxOffset = " << maxOffset << std::endl;
-    maxOffset = offset;
+    maxOffset += length;
     std::cout << "MaxOffset after " << origin->toString() << " = " << maxOffset << std::endl;
   }
 
