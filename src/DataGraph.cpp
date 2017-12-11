@@ -58,3 +58,52 @@ DGNode* maskOp(DGNode* const width, DGNode* const expr, DataGraph& dg) {
 
   return maskExpr;
 }
+
+std::vector<DGNode*> topologicalSort(DataGraph& dg) {
+  vector<DGNode*> nodeOrder;
+  vector<DGNode*> ins = allInputs(dg);
+
+  set<DGNode*> alreadyAdded;
+  afk::concat(nodeOrder, ins);
+  for (auto& node : nodeOrder) {
+    alreadyAdded.insert(node);
+  }
+
+  vector<DGNode*> nodesLeft;
+  for (auto& node : dg.getNodes()) {
+    if (!afk::elem(node, alreadyAdded)) {
+      nodesLeft.push_back(node);
+    }
+  }
+
+  while (nodesLeft.size() > 0) {
+    cout << "Nodes left size = " << nodesLeft.size() << endl;
+
+    for (auto& node : nodesLeft) {
+
+      assert(node != nullptr);
+
+      cout << "Trying with node ptr = " << node << endl;
+      cout << "Node has type        = " << node->getType() << endl;
+      cout << "Trying with node     = " << node->toString() << endl;
+
+      bool allInputsAdded = true;
+      for (auto& input : dg.getInputs(node)) {
+        if (!afk::elem(input, alreadyAdded)) {
+          allInputsAdded = false;
+          break;
+        }
+      }
+
+      if (allInputsAdded) {
+        alreadyAdded.insert(node);
+        nodeOrder.push_back(node);
+        afk::remove(node, nodesLeft);
+        break;
+      }
+    }
+
+  }
+
+  return nodeOrder;
+}

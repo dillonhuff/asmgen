@@ -390,3 +390,5 @@ public:
 };
 
 std::vector<DGNode*> allInputs(const DataGraph& dg);
+
+std::vector<DGNode*> topologicalSort(DataGraph& dg);
