@@ -17,7 +17,7 @@ enum DGType {
 class DGNode {
 public:
   virtual DGType getType() const = 0;
-
+  virtual DGNode* copy() const = 0;
   virtual std::string toString() const = 0;
 
   virtual ~DGNode() {}
@@ -32,6 +32,7 @@ public:
   DGIn(const std::string& name_, const int length_) :
     name(name_), length(length_) {}
 
+  virtual DGNode* copy() const { return new DGIn(name, length); }
   std::string getName() const { return name; }
 
   void setName(const std::string& nn) { name = nn; }
@@ -50,7 +51,10 @@ class DGConst : public DGNode {
 public:
   DGConst(const int value_, const int length_) : value(value_), length(length_) {}
 
+
   virtual std::string toString() const { return std::to_string(value); }
+
+  virtual DGNode* copy() const { return new DGConst(value, length); }
 
   int getValue() const { return value; }
   int getLength() const { return length; }
@@ -75,6 +79,8 @@ public:
            const int readSize_) :
     name(name_), waddr(waddr_),
     wdata(wdata_), memSize(memSize_), readSize(readSize_) {}
+
+  virtual DGNode* copy() const { return new DGMemOut(name, waddr, wdata, memSize, readSize); }
 
   DGNode* getWAddr() const { return waddr; }
   DGNode* getWData() const { return wdata; }
@@ -109,6 +115,7 @@ public:
     memSize(memSize_),
     readSize(readSize_) {}
 
+  virtual DGNode* copy() const { return new DGMemIn(name, raddr, memSize, readSize); }  
   DGNode* getRAddr() const { return raddr; }
 
   int getMemSize() const { return memSize; }
@@ -128,6 +135,8 @@ public:
 
   DGOut(const std::string& name_, const int length_, DGNode* const in_) :
     name(name_), length(length_), in(in_) {}
+
+  virtual DGNode* copy() const { return new DGOut(name, length, in); }
 
   DGNode* getInput() const { return in; }
 
@@ -152,6 +161,8 @@ public:
           DGNode* const op1_) : op(op_), op0(op0_), op1(op1_) {}
 
   virtual DGType getType() const { return DG_BINOP; }
+
+  virtual DGNode* copy() const { return new DGBinop(op, op0, op1); }
 
   DGNode* getOp0() const { return op0; }
   DGNode* getOp1() const { return op1; }
@@ -178,6 +189,8 @@ public:
     op(op_), op0(op0_), op1(op1_), op2(op2_) {}
 
   virtual DGType getType() const { return DG_TRINOP; }
+
+  virtual DGNode* copy() const { return new DGTrinop(op, op0, op1, op2); }
 
   std::string getOpName() const { return op; }
 
@@ -207,6 +220,57 @@ protected:
   
 
 public:
+
+  DataGraph() {}
+
+  DataGraph& operator=(const DataGraph& other) {
+    if (&other == this) {
+      return *this;
+    }
+
+    DataGraph tmp(other);
+    nodes = std::move(tmp.nodes);
+    inEdges = std::move(tmp.inEdges);
+    outEdges = std::move(tmp.outEdges);
+
+    return *this;
+  }
+
+  DataGraph(const DataGraph& other) {
+    std::map<DGNode*, DGNode*> tmpNodeMap;
+
+    for (auto& node : other.nodes) {
+      auto nodeCpy = node->copy();
+      this->nodes.push_back(nodeCpy);
+      tmpNodeMap.insert({node, nodeCpy});
+    }
+
+    for (auto& entry : other.inEdges) {
+      std::vector<DGNode*> thisNodes;
+
+      for (auto& otherNode : entry.second) {
+        assert(afk::contains_key(otherNode, tmpNodeMap));
+        thisNodes.push_back(tmpNodeMap[otherNode]);
+      }
+
+      assert(afk::contains_key(entry.first, tmpNodeMap));
+      inEdges.insert({tmpNodeMap[entry.first], thisNodes});
+    }
+
+    for (auto& entry : other.outEdges) {
+      std::vector<DGNode*> thisNodes;
+
+      for (auto& otherNode : entry.second) {
+        assert(afk::contains_key(otherNode, tmpNodeMap));
+        thisNodes.push_back(tmpNodeMap[otherNode]);
+      }
+
+      assert(afk::contains_key(entry.first, tmpNodeMap));
+      outEdges.insert({tmpNodeMap[entry.first], thisNodes});
+    }
+
+  }
+                
 
   std::vector<DGNode*> getNodes() const { return nodes; }
 
