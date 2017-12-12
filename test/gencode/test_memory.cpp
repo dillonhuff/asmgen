@@ -7,7 +7,7 @@
 using namespace std;
 
 void print_memory(const layout& s) {
-  for (uint i = 0; i < 10; i++) {
+  for (uint i = 0; i < 2; i++) {
     cout << "m0[ " << i << " ] = " << bitset<16>(s.m0[i]) << endl;
   }
 }
@@ -27,10 +27,10 @@ int main() {
 
   cout << "After write" << endl;
   print_memory(s);
-  
-  assert(s.m0[s.self_write_addr] == s.self_write_data);
 
-  
+  cout << "Before assert" << endl;
+
+  assert(bitset<16>(s.m0[s.self_write_addr]) == s.self_write_data);
 
   return 0;
 }

@@ -29,20 +29,40 @@ static inline std::string inlineASMFunction(const std::string& funcName,
   return res;
 }
 
-static inline std::vector<std::string>
-inlineVoidASMFunction(std::vector<std::string> asmOps) {
-  asmOps.push_back("leave");
-  asmOps.push_back("ret");
+// static inline std::vector<std::string>
+// inlineVoidASMFunction(std::vector<std::string> asmOps) {
+//   asmOps.push_back("leave");
+//   asmOps.push_back("ret");
 
-  return asmOps;
-}
+//   return asmOps;
+// }
 
 static inline std::string inlineVoidASMFunction(const std::string& funcName,
                                                 const bool hasClk,
                                                 std::vector<std::string> asmOps) {
-  asmOps.push_back("leave");
-  asmOps.push_back("ret");
-  return inlineASMFunction(funcName, hasClk, asmOps);
+  std::vector<std::string> prog;
+  prog.push_back("push %r15");
+  prog.push_back("push %r14");
+  prog.push_back("push %r13");
+  prog.push_back("push %r12");
+  //prog.push_back("push %rbp");
+  prog.push_back("push %rbx");
+  prog.push_back("push %rsi");
+
+  concat(prog, asmOps);
+
+  prog.push_back("pop %rsi");
+  prog.push_back("pop %rbx");
+  //prog.push_back("pop %rbp");
+  prog.push_back("pop %r12");
+  prog.push_back("pop %r13");  
+  prog.push_back("pop %r14");
+  prog.push_back("pop %r15");  
+
+  //prog.push_back("leave");
+  //prog.push_back("retq");
+
+  return inlineASMFunction(funcName, hasClk, prog);
 }
 
 static inline std::string buildASMProg(const LowProgram& prog) {
