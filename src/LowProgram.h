@@ -115,7 +115,7 @@ public:
     }
 
     if (width == 8) {
-      return "movzwl " + to_string(offset) + "(%rdi), " + receiver;
+      return "movzbl " + to_string(offset) + "(%rdi), " + receiver;
     }
     
     cout << "Unsupported width = " << width << endl;
