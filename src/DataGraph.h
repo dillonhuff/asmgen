@@ -293,6 +293,11 @@ public:
     outEdges[nd] = {};
   }
 
+  void addConnection(DGNode* from, DGNode* to) {
+    map_insert(inEdges, static_cast<DGNode*>(to), static_cast<DGNode*>(from));
+    map_insert(outEdges, static_cast<DGNode*>(from), static_cast<DGNode*>(to));
+  }
+
   DGMemIn* addMemInput(const std::string& name,
                        DGNode* const raddr,
                        const int memSize,
@@ -301,6 +306,10 @@ public:
 
     insertNode(dgIn);
 
+    addConnection(raddr, dgIn);
+    // map_insert(inEdges, static_cast<DGNode*>(dgIn), static_cast<DGNode*>(raddr));
+    // map_insert(outEdges, static_cast<DGNode*>(raddr), static_cast<DGNode*>(dgIn));
+    
     return dgIn;
   }
 
@@ -312,6 +321,9 @@ public:
     auto dgIn = new DGMemOut(name, waddr, wdata, memSize, width);
 
     insertNode(dgIn);
+
+    addConnection(waddr, dgIn);
+    addConnection(wdata, dgIn);
 
     return dgIn;
   }
