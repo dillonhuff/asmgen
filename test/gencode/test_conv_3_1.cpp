@@ -17,7 +17,10 @@ int main() {
   s.lb_p4_clamped_stencil_update_stream$mem_1$waddr$reg0 = 0; // Offset = 2
   s.lb_p4_clamped_stencil_update_stream$mem_1$raddr$reg0 = 0; // Offset = 3
 
-  conv_3_1(&s);
+  int nRuns = 20;
+  for (int i = 0; i < nRuns; i++) {
+    conv_3_1(&s);
+  }
 
   cout << "s.self_out = " << (int) s.self_out << endl;
 

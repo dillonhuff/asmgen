@@ -469,3 +469,81 @@ TEST_CASE("Single register printout") {
 
   deleteContext(c);
 }
+
+TEST_CASE("Memory") {
+  Context* c = newContext();
+  
+  uint width = 16;
+  uint depth = 2;
+  uint index = 1;
+
+  Type* memoryType = c->Record({
+      {"clk", c->Named("coreir.clkIn")},
+        {"write_data", c->BitIn()->Arr(width)},
+          {"write_addr", c->BitIn()->Arr(index)},
+            {"write_en", c->BitIn()},
+              {"read_data", c->Bit()->Arr(width)},
+                {"read_addr", c->BitIn()->Arr(index)}
+    });
+
+      
+  Module* memory = c->getGlobal()->newModuleDecl("memory0", memoryType);
+  ModuleDef* def = memory->newModuleDef();
+
+  def->addInstance("m0",
+                   "coreir.mem",
+                   {{"width", Const::make(c, width)},{"depth", Const::make(c, depth)}});
+  //      		       {{"init", Const::make(c, BitVector(width*depth,0))}});
+
+  def->connect("self.clk", "m0.clk");
+  def->connect("self.write_en", "m0.wen");
+  def->connect("self.write_data", "m0.wdata");
+  def->connect("self.write_addr", "m0.waddr");
+  def->connect("self.read_data", "m0.rdata");
+  def->connect("self.read_addr", "m0.raddr");
+
+  memory->setDef(def);
+
+  c->runPasses({"rungenerators"});
+
+  vector<DataGraph> dgs = coreModuleToDG(memory);
+
+  auto clk = dgs[0].addInput("self_clk", 8);
+  auto clk_last = dgs[0].addInput("self_clk_last", 8);
+
+  assert(dgs.size() > 0);
+
+  auto regAssign = assignRegisters(dgs[0]);
+  LowProgram lowProg = buildLowProgram("memory", dgs[0], regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Dag 0 program" << endl;
+  cout << prog << endl;
+
+  for (uint i = 1; i < dgs.size(); i++) {
+    appendAssignRegisters(dgs[i], regAssign);
+    auto tpSort = topologicalSort(dgs[i]);
+    appendLowProgram(dgs[i], regAssign, tpSort, lowProg);
+
+    prog =
+      buildASMProg(lowProg);
+
+    cout << "Dag " << i << " program" << endl;
+    cout << prog << endl;
+  }
+
+  // regAssign.addInput("self_clk", 8);
+  // regAssign.addInput("self_clk_last", 8);
+
+  lowProg.setClock("self_clk",
+                   "self_clk_last");
+
+  int r = compileCodeAndRun(regAssign, lowProg);
+
+  REQUIRE(r == 0);
+
+  deleteContext(c);
+  
+}
