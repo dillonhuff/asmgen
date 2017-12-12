@@ -8,10 +8,18 @@ nowDeadRegisters(set<DGNode*>& allocated,
                  map<DGNode*, std::string>& regAssignment) {
 
   vector<std::string> freedRegs;
+  vector<DGNode*> freedNodes;
 
   for (auto& node : allocated) {
     bool allOutputsAllocated = true;
+    // cout << "Node " << node->toString() << " points to " << endl;
+
+    // for (auto outNode : dg.getOutEdges(node)) {
+    //   cout << "\t" << outNode->toString() << endl;
+    // }
+
     for (auto outNode : dg.getOutEdges(node)) {
+      
       if (!elem(outNode, allocated)) {
         allOutputsAllocated = false;
         break;
@@ -20,7 +28,12 @@ nowDeadRegisters(set<DGNode*>& allocated,
 
     if (allOutputsAllocated) {
       freedRegs.push_back(regAssignment[node]);
+      freedNodes.push_back(node);
     }
+  }
+
+  for (auto& node : freedNodes) {
+    allocated.erase(node);
   }
 
   freedRegs = sort_unique(freedRegs);
@@ -235,9 +248,9 @@ void appendAssignRegisters(DataGraph& dg,
     }
 
     alreadyAllocated.insert(node);
-    afk::concat(x86_32Bit, nowDeadRegisters(alreadyAllocated,
-                                            dg,
-                                            asg.registerAssignment));
+    // afk::concat(x86_32Bit, nowDeadRegisters(alreadyAllocated,
+    //                                         dg,
+    //                                         asg.registerAssignment));
 
     x86_32Bit = sort_unique(x86_32Bit);
     x86_32Bit = afk::intersection(x86_32Bit, allx86_32Bit);
