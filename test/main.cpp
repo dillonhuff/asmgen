@@ -242,11 +242,19 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
           auto waddr = findArg("waddr", inConns);
           auto wdata = findArg("wdata", inConns);
 
+          Values args = inst->getModuleRef()->getGenArgs();
+
+          auto wArg = args["width"];
+          auto dArg = args["depth"];
+        
+          uint width = wArg->get<int>(); //16;
+          uint depth = dArg->get<int>();
+          
           auto in = dg.addMemOutput(inst->toString(),
                                     dgVerts[waddr.getWire()],
                                     dgVerts[wdata.getWire()],
-                                    10*2,
-                                    2);
+                                    (width/8)*depth,
+                                    width / 8);
 
           cout << "Adding memoutput = " << in->toString() << " ";
           cout << "for node " << nodeString(wd) << endl;
@@ -257,11 +265,19 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
 
           auto inConns = getInputConnections(vd, g);
           auto raddr = findArg("raddr", inConns);
+
+          Values args = inst->getModuleRef()->getGenArgs();
+
+          auto wArg = args["width"];
+          auto dArg = args["depth"];
+        
+          uint width = wArg->get<int>(); //16;
+          uint depth = dArg->get<int>();
           
           auto in = dg.addMemInput(inst->toString(),
                                    dgVerts[raddr.getWire()],
-                                   10*2,
-                                   2);
+                                   (width/8)*depth,
+                                   width/8);
 
           dgVerts[inst->sel("rdata")] = in;
         }
