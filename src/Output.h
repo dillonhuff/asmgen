@@ -47,11 +47,11 @@ static inline std::string inlineVoidASMFunction(const std::string& funcName,
   prog.push_back("push %r12");
   //prog.push_back("push %rbp");
   prog.push_back("push %rbx");
-  prog.push_back("push %rsi");
+  //prog.push_back("push %rsi");
 
   concat(prog, asmOps);
 
-  prog.push_back("pop %rsi");
+  //prog.push_back("pop %rsi");
   prog.push_back("pop %rbx");
   //prog.push_back("pop %rbp");
   prog.push_back("pop %r12");

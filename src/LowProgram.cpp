@@ -78,10 +78,9 @@ void appendLowProgram(const DataGraph& dg,
         auto ra = regAssign.registerAssignment;
         //prog.addMov("$1", ra[bop], 16);
         // TODO: Fix in register allocation
-        prog.addTest(TEST_E,
-                     regAssign.registerAssignment[bop->getOp0()],
-                     regAssign.registerAssignment[bop->getOp1()],
-                     16);
+        prog.addCmp(regAssign.registerAssignment[bop->getOp0()],
+                    regAssign.registerAssignment[bop->getOp1()],
+                    16);
 
         prog.addMov("$1", ra[bop], 16);
         

@@ -142,7 +142,7 @@ public:
     }
 
     if (width == 16) {
-      return "mov " + to_string(offset) + "(%rdi), " + receiver;
+      return "movzwl " + to_string(offset) + "(%rdi), " + receiver;
     }
 
     if (width == 8) {
@@ -187,6 +187,26 @@ public:
     //   assert(false);
     // }
     // assert(false);
+  }
+
+};
+
+class Cmp : public Instruction {
+protected:
+  int width;
+  std::string source;
+  std::string receiver;
+
+public:
+  Cmp(const int width_,
+      const std::string& source_,
+      const std::string& receiver_) :
+    width(width_), source(source_), receiver(receiver_) {}
+
+  std::string toString() const {
+
+    return "cmp " + source + ", " + receiver;
+
   }
 
 };
@@ -344,6 +364,12 @@ public:
                const std::string& dest,
                const int width) {
     instructions.push_back(new Test(tp, width, src, dest));
+  }
+
+  void addCmp(const std::string& src,
+              const std::string& dest,
+              const int width) {
+    instructions.push_back(new Cmp(width, src, dest));
   }
   
   void addCMov(const std::string& src, const std::string& dest, const int width) {
