@@ -63,6 +63,36 @@ TEST_CASE("Build tiny program") {
   
 //}
 
+TEST_CASE("Register assignment conflict") {
+  DataGraph dg;
+  DGIn* a = dg.addInput("a", 16);
+  DGIn* b = dg.addInput("b", 16);
+  DGIn* c = dg.addInput("c", 16);
+
+  DGBinop* add0 = dg.addBinop("+", a, b);
+  DGBinop* add1 = dg.addBinop("+", c, b);
+
+  DGOut* r1 = dg.addOutput("r1", 16, add0);
+  DGOut* r2 = dg.addOutput("r2", 16, add1);
+
+  auto regAssign = assignRegisters(dg);
+
+  vector<DGNode*> regOrder = regAssign.topoOrder;
+
+  LowProgram lowProg = buildLowProgram("two_adds", dg, regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Two registers program" << endl;
+  cout << prog << endl;
+
+  int r = compileCodeAndRun(regAssign, lowProg);
+
+  REQUIRE(r == 0);
+  
+}
+
 TEST_CASE("Test conditional move node") {
   DataGraph dg;
   DGIn* in0 = dg.addInput("in0", 16);
