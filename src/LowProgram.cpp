@@ -43,7 +43,7 @@ void appendLowProgram(const DataGraph& dg,
                       RegisterAssignment& regAssign,
                       std::vector<DGNode*>& topoOrder,
                       LowProgram& prog) {
-  for (auto& node : topoOrder) { //regAssign.topoOrder) {
+  for (auto& node : topoOrder) {
     if (node->getType() == DG_INPUT) {
       auto in = toInput(node);
 
@@ -55,7 +55,7 @@ void appendLowProgram(const DataGraph& dg,
     } else if (node->getType() == DG_OUTPUT) {
       auto out = toOutput(node);
 
-      prog.addStore(regAssign.getOffset(out), //->toString()],
+      prog.addStore(regAssign.getOffset(out),
                     0,
                     out->getLength(),
                     regAssign.registerAssignment[out->getInput()]);
@@ -142,10 +142,16 @@ void appendLowProgram(const DataGraph& dg,
       }
       
       assert(waddrReg != "");
-      
+
+      std::string freshLabel = regAssign.freshLabel();
+
+      prog.addTest(TEST_NE, ra[memOut->getWEn()], ra[memOut->getWEn()], 16);
+      prog.addJump(JUMP_E, freshLabel);
       prog.addMov(ra[memOut->getWData()],
                   to_string(memOffset) + "(%rdi, " + to64Bit(ra[memOut->getWAddr()]) + ", 2)",
                   16);
+
+      prog.addLabel(freshLabel);
 
     } else if (node->getType() == DG_MEM_INPUT) {
 

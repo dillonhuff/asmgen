@@ -14,6 +14,7 @@ public:
 
 struct RegisterAssignment {
   int maxOffset;
+  int curLabel;
   std::vector<DGNode*> topoOrder;
   std::map<DGNode*, std::string> registerAssignment;
 
@@ -22,7 +23,14 @@ struct RegisterAssignment {
   std::map<MemChunk*, int> offsets;
   std::map<DGNode*, MemChunk*> memLocs;
 
-  RegisterAssignment() : maxOffset(0) {}
+  RegisterAssignment() : maxOffset(0), curLabel(0) {}
+
+  std::string freshLabel() {
+    auto loc = "location_" + std::to_string(curLabel);
+
+    curLabel++;
+    return loc;
+  }
 
   int getMaxOffset() const { return maxOffset; }
 

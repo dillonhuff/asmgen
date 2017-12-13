@@ -30,6 +30,37 @@ public:
   virtual ~Instruction() {}
 };
 
+class Label : public Instruction {
+  std::string name;
+
+public:
+  Label(const std::string& name_) : name(name_) {}
+  virtual std::string toString() const { return name + ":"; }
+};
+
+enum JumpType {
+  JUMP_E,
+  JUMP_NE,
+};
+
+class Jump : public Instruction {
+  JumpType tp;
+  std::string target;
+public:
+  Jump(const JumpType tp_, const std::string& name_) : tp(tp_), target(name_) {}
+  virtual std::string toString() const {
+    if (tp == JUMP_E) {
+      return "je " + target;
+    }
+
+    if (tp == JUMP_NE) {
+      return "jne " + target;
+    }
+
+    assert(false);
+  }
+};
+
 class Arithmetic : public Instruction {
 protected:
   ArithType tp;
@@ -297,6 +328,15 @@ public:
 
   void addMov(const std::string& src, const std::string& dest, const int width) {
     instructions.push_back(new Mov(width, src, dest));
+  }
+
+  void addJump(const JumpType tp,
+               const std::string& target) {
+    instructions.push_back(new Jump(tp, target));
+  }
+
+  void addLabel(const std::string& name) {
+    instructions.push_back(new Label(name));
   }
 
   void addTest(const TestType tp,
