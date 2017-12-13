@@ -67,6 +67,7 @@ class DGMemOut : public DGNode {
   std::string name;
   DGNode* waddr;
   DGNode* wdata;
+  DGNode* wen;
   int memSize;
   int readSize;
 
@@ -75,15 +76,17 @@ public:
   DGMemOut(const std::string& name_,
            DGNode* const waddr_,
            DGNode* const wdata_,
+           DGNode* const wen_,
            const int memSize_,
            const int readSize_) :
     name(name_), waddr(waddr_),
-    wdata(wdata_), memSize(memSize_), readSize(readSize_) {}
+    wdata(wdata_), wen(wen_), memSize(memSize_), readSize(readSize_) {}
 
-  virtual DGNode* copy() const { return new DGMemOut(name, waddr, wdata, memSize, readSize); }
+  virtual DGNode* copy() const { return new DGMemOut(name, waddr, wdata, wen, memSize, readSize); }
 
   DGNode* getWAddr() const { return waddr; }
   DGNode* getWData() const { return wdata; }
+  DGNode* getWEn() const { return wen; }
 
   int getMemSize() const { return memSize; }
   int getReadSize() const { return readSize; }
@@ -314,16 +317,18 @@ public:
   }
 
   DGMemOut* addMemOutput(const std::string& name,
-                        DGNode* const waddr,
+                         DGNode* const waddr,
                          DGNode* const wdata,
-                        const int memSize,
-                        const int width) {
-    auto dgIn = new DGMemOut(name, waddr, wdata, memSize, width);
+                         DGNode* const wen,
+                         const int memSize,
+                         const int width) {
+    auto dgIn = new DGMemOut(name, waddr, wdata, wen, memSize, width);
 
     insertNode(dgIn);
 
     addConnection(waddr, dgIn);
     addConnection(wdata, dgIn);
+    addConnection(wen, dgIn);
 
     return dgIn;
   }

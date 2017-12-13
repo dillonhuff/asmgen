@@ -154,16 +154,6 @@ void appendLowProgram(const DataGraph& dg,
       auto memIn = toMemInput(node);
       int memOffset = regAssign.getOffset(memIn);
 
-      //auto raddr = ra[memIn->getRAddr()];
-      // cout << "Raddr = " << memIn->getRAddr()->toString() << endl;
-
-      // cout << "Register assignment = " << endl;
-      // for (auto& val : ra) {
-      //   cout << val.first->toString() << " --> " << val.second << endl;
-      // }
-      
-      //assert(waddrReg != "");
-      
       prog.addMov(to_string(memOffset) + "(%rdi, " + to64Bit(ra[memIn->getRAddr()]) + ", 2)",
                   ra[memIn],
                   16);

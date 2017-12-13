@@ -241,6 +241,7 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
           auto inConns = getInputConnections(vd, g);
           auto waddr = findArg("waddr", inConns);
           auto wdata = findArg("wdata", inConns);
+          auto wen = findArg("wen", inConns);
 
           Values args = inst->getModuleRef()->getGenArgs();
 
@@ -253,6 +254,7 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
           auto in = dg.addMemOutput(inst->toString(),
                                     dgVerts[waddr.getWire()],
                                     dgVerts[wdata.getWire()],
+                                    dgVerts[wen.getWire()],
                                     (width/8)*depth,
                                     width / 8);
 
