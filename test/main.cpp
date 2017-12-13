@@ -597,3 +597,89 @@ TEST_CASE("Memory") {
   deleteContext(c);
   
 }
+
+TEST_CASE("Equals then register") {
+
+  Context* c = newContext();
+
+  uint width = 16;
+
+  Type* regType = c->Record({
+      {"clk", c->Named("coreir.clkIn")},
+        {"in_sel", c->BitIn()->Arr(width)},
+          {"in_1", c->BitIn()->Arr(width)},
+            {"in_2", c->BitIn()->Arr(width)},
+              {"out_0", c->Bit()->Arr(width)}
+    });
+
+  Module* regComb =
+    c->getGlobal()->newModuleDecl("regComb", regType);
+
+  ModuleDef* def = regComb->newModuleDef();
+
+  def->addInstance("eq0", "coreir.eq", {{"width", Const::make(c, width)}});
+  def->addInstance("const10",
+                   "coreir.const",
+                   {{"width", Const::make(c, width)}},
+                   {{"value", Const::make(c, BitVector(16, 10))}});
+
+
+  def->addInstance("reg0", "coreir.reg", {{"width", Const::make(c, width)}});
+  def->addInstance("mux0", "coreir.mux", {{"width", Const::make(c, width)}});
+
+  def->connect("self.in_sel", "eq0.in0");
+  def->connect("const10.out", "eq0.in1");
+
+  def->connect("eq0.out", "mux0.sel");
+
+  def->connect("self.in_1", "mux0.in0");
+  def->connect("self.in_2", "mux0.in1");
+
+  def->connect("mux0.out", "reg0.in");
+
+  def->connect("self.clk", "reg0.clk");
+
+  def->connect("reg0.out", "self.out_0");
+
+  regComb->setDef(def);
+
+  vector<DataGraph> dgs = coreModuleToDG(regComb);
+
+  auto clk = dgs[0].addInput("self_clk", 8);
+  auto clk_last = dgs[0].addInput("self_clk_last", 8);
+
+  assert(dgs.size() > 0);
+
+  auto regAssign = assignRegisters(dgs[0]);
+  LowProgram lowProg = buildLowProgram("reg_eq", dgs[0], regAssign);
+
+  string prog =
+    buildASMProg(lowProg);
+
+  cout << "Dag 0 program" << endl;
+  cout << prog << endl;
+
+  for (uint i = 1; i < dgs.size(); i++) {
+    appendAssignRegisters(dgs[i], regAssign);
+    auto tpSort = topologicalSort(dgs[i]);
+    appendLowProgram(dgs[i], regAssign, tpSort, lowProg);
+
+    prog =
+      buildASMProg(lowProg);
+
+    cout << "Dag " << i << " program" << endl;
+    cout << prog << endl;
+  }
+
+  // regAssign.addInput("self_clk", 8);
+  // regAssign.addInput("self_clk_last", 8);
+
+  lowProg.setClock("self_clk",
+                   "self_clk_last");
+
+  int r = compileCodeAndRun(regAssign, lowProg);
+
+  REQUIRE(r == 0);
+
+  deleteContext(c);
+}

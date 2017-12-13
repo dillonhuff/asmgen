@@ -350,8 +350,10 @@ public:
 
     insertNode(dgOut);
 
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(input));
-    map_insert(outEdges, static_cast<DGNode*>(input), static_cast<DGNode*>(dgOut));
+    addConnection(input, dgOut);
+
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(input));
+    // map_insert(outEdges, static_cast<DGNode*>(input), static_cast<DGNode*>(dgOut));
 
     return dgOut;
   }
@@ -372,13 +374,17 @@ public:
 
     insertNode(dgOut);
 
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op2));
+    addConnection(op0, dgOut);
+    addConnection(op1, dgOut);
+    addConnection(op2, dgOut);
 
-    map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
-    map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
-    map_insert(outEdges, static_cast<DGNode*>(op2), static_cast<DGNode*>(dgOut));
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op2));
+
+    // map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
+    // map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
+    // map_insert(outEdges, static_cast<DGNode*>(op2), static_cast<DGNode*>(dgOut));
     
     return dgOut;
 
@@ -391,11 +397,14 @@ public:
 
     insertNode(dgOut);
 
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
-    map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
+    addConnection(op0, dgOut);
+    addConnection(op1, dgOut);
 
-    map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
-    map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op0));
+    // map_insert(inEdges, static_cast<DGNode*>(dgOut), static_cast<DGNode*>(op1));
+
+    // map_insert(outEdges, static_cast<DGNode*>(op0), static_cast<DGNode*>(dgOut));
+    // map_insert(outEdges, static_cast<DGNode*>(op1), static_cast<DGNode*>(dgOut));
     
     return dgOut;
   }

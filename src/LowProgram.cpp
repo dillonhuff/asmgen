@@ -76,7 +76,9 @@ void appendLowProgram(const DataGraph& dg,
       } else if ((op == "==") || (op == " == ")) {
 
         auto ra = regAssign.registerAssignment;
-        prog.addMov("$1", ra[bop], 16);
+        //prog.addMov("$1", ra[bop], 16);
+        // TODO: Fix in register allocation
+        prog.addMov("$1", "%ecx", 16); //ra[bop], 16);
 
         prog.addTest(TEST_E,
                      regAssign.registerAssignment[bop->getOp0()],
