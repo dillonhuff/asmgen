@@ -163,16 +163,23 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
     } else if (isConstant(wd)) {
       Instance* inst = toInstance(wd.getWire());
 
+      cout << "Constant = " << inst->toString() << endl;
       BitVector bv(0, 0);
       if (getQualifiedOpName(*inst) == "coreir.const") {
+        cout << "coreir const" << endl;
 
-        Values args = inst->getModuleRef()->getGenArgs();
+        Values args = inst->getModArgs();
         auto valArg = args["value"];
+
+        assert(valArg != nullptr);
+
+        cout << "valArg = " << valArg->toString() << endl;
         bv = valArg->get<BitVector>();
 
       } else {
 
-        Values args = inst->getModuleRef()->getGenArgs();
+        cout << "corebit const" << endl;
+        Values args = inst->getModArgs();
         auto valArg = args["value"];
 
         assert(valArg->getValueType() == inst->getContext()->Bool());
@@ -186,6 +193,8 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
         }
       }
 
+      cout << "Bit vector val = " << bv << endl;
+      cout << "Bit vector constant value = " << bv.to_type<int>() << endl;
       auto dc = dg.addConstant(bv.to_type<int>(), bv.bitLength());
 
       cout << "Adding constant " << inst->sel("out")->toString() << " node " << dc->toString() << endl;
