@@ -51,6 +51,7 @@ class DGConst : public DGNode {
 public:
   DGConst(const int value_, const int length_) : value(value_), length(length_) {}
 
+  std::string valueString() const { return std::to_string(value); }
 
   virtual std::string toString() const { return std::to_string(value); }
 

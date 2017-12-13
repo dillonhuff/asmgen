@@ -163,11 +163,34 @@ void addDAGNodes(const std::deque<vdisc>& topoOrder,
     } else if (isConstant(wd)) {
       Instance* inst = toInstance(wd.getWire());
 
-      // TODO: Add constant value computation
-      auto dc = dg.addConstant(1, 16);
+      BitVector bv(0, 0);
+      if (getQualifiedOpName(*inst) == "coreir.const") {
+
+        Values args = inst->getModuleRef()->getGenArgs();
+        auto valArg = args["value"];
+        bv = valArg->get<BitVector>();
+
+      } else {
+
+        Values args = inst->getModuleRef()->getGenArgs();
+        auto valArg = args["value"];
+
+        assert(valArg->getValueType() == inst->getContext()->Bool());
+
+        bool bval = valArg->get<bool>();
+
+        if (bval == true) {
+          bv = BitVector(1, 1);
+        } else {
+          bv = BitVector(1, 0);
+        }
+      }
+
+      auto dc = dg.addConstant(bv.to_type<int>(), bv.bitLength());
 
       cout << "Adding constant " << inst->sel("out")->toString() << " node " << dc->toString() << endl;
       dgVerts[inst->sel("out")] = dc;
+
     } else if (isInstance(wd.getWire())) {
 
       Instance* inst = toInstance(wd.getWire());

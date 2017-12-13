@@ -133,7 +133,8 @@ void appendLowProgram(const DataGraph& dg,
     } else if (node->getType() == DG_CONSTANT) {
       auto& ra = regAssign.registerAssignment;
 
-      prog.addMov("$1", ra[node], 16);
+      auto cn = toConstant(node);
+      prog.addMov("$" + cn->valueString(), ra[node], 16);
 
     } else if (node->getType() == DG_MEM_OUTPUT) {
       auto& ra = regAssign.registerAssignment;
