@@ -81,10 +81,11 @@ void appendLowProgram(const DataGraph& dg,
                     regAssign.registerAssignment[bop->getOp1()],
                     16);
 
-        prog.addMov("$1", ra[bop], 16);
+        prog.addMov(new LowImmediate(1),
+                    new LowRegister(ra[bop], 16), 16);
         
         // TODO: Fix this in register allocation
-        prog.addMov("$0", "%eax", 16);
+        prog.addMov(new LowImmediate(0), new LowRegister("%eax", 16), 16);
         prog.addCMov("%eax", ra[bop], 16);
         
         
@@ -124,7 +125,8 @@ void appendLowProgram(const DataGraph& dg,
 
       // TODO: Remove length hardcoding
       auto& ra = regAssign.registerAssignment;
-      prog.addMov(ra[trop->getOp0()], ra[trop], 16);
+      prog.addMov(new LowRegister(ra[trop->getOp0()], 16),
+                  new LowRegister(ra[trop], 16), 16);
 
       prog.addTest(TEST_NE, ra[trop->getOp2()], ra[trop->getOp2()], 16);
 
@@ -134,7 +136,9 @@ void appendLowProgram(const DataGraph& dg,
       auto& ra = regAssign.registerAssignment;
 
       auto cn = toConstant(node);
-      prog.addMov("$" + cn->valueString(), ra[node], 16);
+      prog.addMov(new LowImmediate(stoi(cn->valueString())),
+                  new LowRegister(ra[node], 16),
+                  16);
 
     } else if (node->getType() == DG_MEM_OUTPUT) {
       auto& ra = regAssign.registerAssignment;
@@ -157,9 +161,17 @@ void appendLowProgram(const DataGraph& dg,
 
       prog.addTest(TEST_NE, ra[memOut->getWEn()], ra[memOut->getWEn()], 16);
       prog.addJump(JUMP_E, freshLabel);
-      prog.addMov(ra[memOut->getWData()],
-                  to_string(memOffset) + "(%rdi, " + to64Bit(ra[memOut->getWAddr()]) + ", 2)",
+
+      prog.addMov(new LowRegister(ra[memOut->getWData()], 16),
+                  new LowAddress(memOffset,
+                                 new LowRegister("%rdi", 64),
+                                 new LowRegister(to64Bit(ra[memOut->getWAddr()]), 64),
+                                 2),
                   16);
+
+      // prog.addMov(ra[memOut->getWData()],
+      //             to_string(memOffset) + "(%rdi, " + to64Bit(ra[memOut->getWAddr()]) + ", 2)",
+      //             16);
 
       prog.addLabel(freshLabel);
 
@@ -170,8 +182,12 @@ void appendLowProgram(const DataGraph& dg,
       auto memIn = toMemInput(node);
       int memOffset = regAssign.getOffset(memIn);
 
-      prog.addMov(to_string(memOffset) + "(%rdi, " + to64Bit(ra[memIn->getRAddr()]) + ", 2)",
-                  ra[memIn],
+      //to_string(memOffset) + "(%rdi, " + to64Bit(ra[memIn->getRAddr()]) + ", 2)",
+      prog.addMov(new LowAddress(memOffset,
+                                 new LowRegister("%rdi", 64),
+                                 new LowRegister(to64Bit(ra[memIn->getRAddr()]), 64),
+                                 2),
+                  new LowRegister(ra[memIn], 16),
                   16);
 
 

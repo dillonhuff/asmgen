@@ -9,6 +9,51 @@
 
 using namespace std;
 
+class LowOperand {
+public:
+
+  virtual std::string toString() const { return "NOPE"; }
+};
+
+class LowRegister : public LowOperand {
+public:
+  std::string name;
+  int width;
+
+  LowRegister(const std::string& name_,
+              const int width_) : name(name_), width(width_) {}
+
+  virtual std::string toString() const { return name; }
+};
+
+class LowImmediate : public LowOperand {
+public:
+  int value;
+
+  LowImmediate(const int value_) : value(value_) {}
+
+  virtual std::string toString() const { return "$" + std::to_string(value); }
+};
+
+class LowAddress : public LowOperand {
+public:
+  int offset;
+  LowRegister* base;
+  LowRegister* offsetReg;
+  int offsetFactor;
+
+  LowAddress(const int offset_,
+             LowRegister* const base_,
+             LowRegister* const offsetReg_,
+             const int offsetFactor_) :
+    offset(offset_), base(base_), offsetReg(offsetReg_), offsetFactor(offsetFactor_) {}
+
+  virtual std::string toString() const {
+    return std::to_string(offset) + "(" + base->toString() + ", " + offsetReg->toString() + ", " + std::to_string(offsetFactor) + ")";
+  }
+
+};
+
 enum TestType {
   TEST_E,
   TEST_NE
@@ -175,22 +220,11 @@ public:
 
   std::string toString() const {
 
-    //if (tp == TEST_NE) {
-
     if ((width == 16) || (width == 32)) {
       return "test " + source + ", " + receiver;
     }
 
     assert(false);
-    // } else if (tp == TEST_E) {
-
-    //   if ((width == 16) || (width == 32)) {
-    //     return "testne " + source + ", " + receiver;
-    //   }
-      
-    //   assert(false);
-    // }
-    // assert(false);
   }
 
 };
@@ -218,31 +252,31 @@ public:
 class Mov : public Instruction {
 protected:
   int width;
-  std::string source;
-  std::string receiver;
+  LowOperand* source;
+  LowOperand* receiver;
 
 public:
 
   Mov(const int width_,
-      const std::string& source_,
-      const std::string& receiver_) :
+      LowOperand* source_,
+      LowOperand* receiver_) :
     width(width_), source(source_), receiver(receiver_) {}
 
   std::string toString() const {
     if (width == 128) {
-      return "movdqu " + source + ", " + receiver;
+      return "movdqu " + source->toString() + ", " + receiver->toString();
     }
 
     if (width == 32) {
-      return "movdl " + source + ", " + receiver;
+      return "movdl " + source->toString() + ", " + receiver->toString();
     }
 
     if (width == 16) {
-      return "mov " + source + ", " + receiver;
+      return "mov " + source->toString() + ", " + receiver->toString();
     }
 
     if (width == 8) {
-      return "movzwl " + source + ", " + receiver;
+      return "movzwl " + source->toString() + ", " + receiver->toString();
     }
     
     assert(false);
@@ -350,7 +384,9 @@ public:
     instructions.push_back(new Load(offset, alignment, width, receiver));
   }
 
-  void addMov(const std::string& src, const std::string& dest, const int width) {
+  void addMov(LowOperand* src,
+              LowOperand* dest,
+              const int width) {
     instructions.push_back(new Mov(width, src, dest));
   }
 
