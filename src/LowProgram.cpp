@@ -91,8 +91,8 @@ void appendLowProgram(const DataGraph& dg,
         
       } else if ((op == "!=") || (op == " != ")) {
         prog.addTest(TEST_NE,
-                     regAssign.registerAssignment[bop->getOp0()],
-                     regAssign.registerAssignment[bop->getOp1()],
+                     new LowRegister(regAssign.registerAssignment[bop->getOp0()], 32),
+                     new LowRegister(regAssign.registerAssignment[bop->getOp1()], 32),
                      32);
         
       } else if ((op == "*") ||
@@ -128,7 +128,10 @@ void appendLowProgram(const DataGraph& dg,
       prog.addMov(new LowRegister(ra[trop->getOp0()], 16),
                   new LowRegister(ra[trop], 16), 16);
 
-      prog.addTest(TEST_NE, ra[trop->getOp2()], ra[trop->getOp2()], 16);
+      prog.addTest(TEST_NE,
+                   new LowRegister(ra[trop->getOp2()], 16),
+                   new LowRegister(ra[trop->getOp2()], 16),
+                   16);
 
       prog.addCMov(ra[trop->getOp1()], ra[trop], 16);
 
@@ -159,7 +162,10 @@ void appendLowProgram(const DataGraph& dg,
 
       std::string freshLabel = regAssign.freshLabel();
 
-      prog.addTest(TEST_NE, ra[memOut->getWEn()], ra[memOut->getWEn()], 16);
+      prog.addTest(TEST_NE,
+                   new LowRegister(ra[memOut->getWEn()], 16),
+                   new LowRegister(ra[memOut->getWEn()], 16),
+                   16);
       prog.addJump(JUMP_E, freshLabel);
 
       prog.addMov(new LowRegister(ra[memOut->getWData()], 16),
@@ -168,10 +174,6 @@ void appendLowProgram(const DataGraph& dg,
                                  new LowRegister(to64Bit(ra[memOut->getWAddr()]), 64),
                                  2),
                   16);
-
-      // prog.addMov(ra[memOut->getWData()],
-      //             to_string(memOffset) + "(%rdi, " + to64Bit(ra[memOut->getWAddr()]) + ", 2)",
-      //             16);
 
       prog.addLabel(freshLabel);
 
@@ -182,7 +184,6 @@ void appendLowProgram(const DataGraph& dg,
       auto memIn = toMemInput(node);
       int memOffset = regAssign.getOffset(memIn);
 
-      //to_string(memOffset) + "(%rdi, " + to64Bit(ra[memIn->getRAddr()]) + ", 2)",
       prog.addMov(new LowAddress(memOffset,
                                  new LowRegister("%rdi", 64),
                                  new LowRegister(to64Bit(ra[memIn->getRAddr()]), 64),

@@ -208,20 +208,20 @@ class Test : public Instruction {
 protected:
   TestType tp;
   int width;
-  std::string source;
-  std::string receiver;
+  LowRegister* source;
+  LowRegister* receiver;
 
 public:
   Test(const TestType tp_,
        const int width_,
-       const std::string& source_,
-       const std::string& receiver_) :
+       LowRegister* const source_,
+       LowRegister* const receiver_) :
     tp(tp_), width(width_), source(source_), receiver(receiver_) {}
 
   std::string toString() const {
 
     if ((width == 16) || (width == 32)) {
-      return "test " + source + ", " + receiver;
+      return "test " + source->toString() + ", " + receiver->toString();
     }
 
     assert(false);
@@ -400,8 +400,8 @@ public:
   }
 
   void addTest(const TestType tp,
-               const std::string& src,
-               const std::string& dest,
+               LowRegister* const src,
+               LowRegister* const dest,
                const int width) {
     instructions.push_back(new Test(tp, width, src, dest));
   }
