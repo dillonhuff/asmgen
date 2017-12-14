@@ -88,13 +88,17 @@ public:
         opName = "paddd ";
       } else if ((registerWidth == 32) && (opWidth == 32)) {
         opName = "addl ";
+      } else if ((registerWidth == 64) && (opWidth == 64)) {
+        opName = "add ";
       } else {
         assert(false);
       }
     } else if (tp == ARITH_INT_SUB) {
       if ((registerWidth == 32) && (opWidth == 32)) {
-        opName = "addl ";
+        opName = "subl ";
       } else if ((registerWidth == 16) && (opWidth == 16)) {
+        opName = "sub ";
+      } else if ((registerWidth == 64) && (opWidth == 64)) {
         opName = "sub ";
       } else {
         assert(false);

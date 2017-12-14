@@ -133,32 +133,31 @@ void appendAssignRegisters(DataGraph& dg,
     if (notAdded) {
       if (node->getType() == DG_INPUT) {
 
-        asg.addOffset(node, toInput(node)->getLength() / 8); //offset);
+        asg.addOffset(node, toInput(node)->getLength() / 8);
         
-        //offset += toInput(node)->getLength() / 8;
       } else if (node->getType() == DG_OUTPUT) {
 
-        asg.addOffset(node, toOutput(node)->getLength() / 8); //offset);
-        //offset += toOutput(node)->getLength() / 8;
+        asg.addOffset(node, toOutput(node)->getLength() / 8);
+
       } else if (node->getType() == DG_MEM_INPUT) {
 
-        asg.addOffset(node, toMemInput(node)->getMemSize()); //offset);
-        //offset += toMemInput(node)->getMemSize();
+        asg.addOffset(node, toMemInput(node)->getMemSize());
+
       } else if (node->getType() == DG_MEM_OUTPUT) {
 
-        asg.addOffset(node, toMemOutput(node)->getMemSize()); //offset);
-        //offset += toMemOutput(node)->getMemSize();
+        asg.addOffset(node, toMemOutput(node)->getMemSize());
+
       }
     }
 
   }
 
-  vector<string> allx86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
+  vector<string> allx86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"};
   afk::concat(allx86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
         "%r13d", "%r14d", "%r15d"});
   
   // Horrible hack
-  vector<string> x86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"}; //"esi", "ebx"};
+  vector<string> x86_32Bit{"%eax", "%ecx", "%edx", "%esi", "%ebx"};
   afk::concat(x86_32Bit, {"%r8d", "%r9d", "%r10d", "%r11d", "%r12d",
         "%r13d", "%r14d", "%r15d"});
 

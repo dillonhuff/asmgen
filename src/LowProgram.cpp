@@ -188,8 +188,18 @@ LowProgram buildLowProgram(const std::string& name,
                            RegisterAssignment& regAssign) {
   LowProgram prog(name);
 
+  int stackSize = 100;
+
+  prog.addArithmetic(ARITH_INT_SUB, 64, 64,
+                     "$" + to_string(stackSize),
+                     "%rsp");
+
   appendLowProgram(dg, regAssign, regAssign.topoOrder, prog);
 
+  prog.addArithmetic(ARITH_INT_ADD, 64, 64,
+                     "$" + to_string(stackSize),
+                     "%rsp");
+  
   return prog;
 }
 
