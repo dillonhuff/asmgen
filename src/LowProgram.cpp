@@ -76,7 +76,6 @@ void appendLowProgram(const DataGraph& dg,
       } else if ((op == "==") || (op == " == ")) {
 
         auto ra = regAssign.registerAssignment;
-        //prog.addMov("$1", ra[bop], 16);
         // TODO: Fix in register allocation
         prog.addCmp(regAssign.registerAssignment[bop->getOp0()],
                     regAssign.registerAssignment[bop->getOp1()],
@@ -188,7 +187,7 @@ LowProgram buildLowProgram(const std::string& name,
                            RegisterAssignment& regAssign) {
   LowProgram prog(name);
 
-  int stackSize = 100;
+  int stackSize = regAssign.getStackSize();
 
   prog.addArithmetic(ARITH_INT_SUB, 64, 64,
                      "$" + to_string(stackSize),

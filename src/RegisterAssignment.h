@@ -2,17 +2,25 @@
 
 #include "DataGraph.h"
 
+
 class MemChunk {
 public:
   std::string name;
   DGNode* origin;
+  bool isHeap;
 
   MemChunk(const std::string& name_,
            DGNode* const origin_) :
-    name(name_), origin(origin_) {}
+    name(name_), origin(origin_), isHeap(true) {}
+
+  bool isOnHeap() const { return isHeap; }
+  bool isOnStack() const { return !isHeap; }
 };
 
 struct RegisterAssignment {
+  int stackSize;
+
+  // Passed in struct size
   int maxOffset;
   int curLabel;
   std::vector<DGNode*> topoOrder;
@@ -23,7 +31,9 @@ struct RegisterAssignment {
   std::map<MemChunk*, int> offsets;
   std::map<DGNode*, MemChunk*> memLocs;
 
-  RegisterAssignment() : maxOffset(0), curLabel(0) {}
+  RegisterAssignment() : stackSize(0), maxOffset(0), curLabel(0) {}
+
+  int getStackSize() const { return stackSize; }
 
   std::string freshLabel() {
     auto loc = "location_" + std::to_string(curLabel);
